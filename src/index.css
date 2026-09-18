@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+.weather-container {
+  @apply min-h-screen bg-gray-100 p-6;
+}
+
+.weather-title {
+  @apply text-3xl font-bold text-center mb-6;
+}
+
+/* Search */
+
+.search-container {
+  @apply flex gap-2 max-w-xl mx-auto mb-6;
+}
+
+.search-input {
+  @apply flex-1 border border-gray-300 rounded-lg px-4 py-2 bg-white;
+}
+
+.search-button {
+  @apply bg-blue-600 text-white px-5 py-2 rounded-lg;
+}
+
+/* Weather */
+
+.weather-card {
+  @apply bg-white max-w-xl mx-auto p-6 rounded-xl shadow-md mb-6;
+}
+
+.weather-city {
+  @apply text-2xl font-bold text-center;
+}
+
+.weather-temperature {
+  @apply text-5xl font-bold text-center mt-4;
+}
+
+.weather-description {
+  @apply text-center text-gray-500 mt-2;
+}
+
+.weather-details {
+  @apply grid grid-cols-3 gap-4 text-center mt-6 text-sm;
+}
+
+.favorite-button {
+  @apply block mx-auto mt-6 bg-green-600 text-white px-5 py-2 rounded-lg;
+}
+
+/* Favorites */
+
+.favorite-cities {
+  @apply max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md;
+}
+
+.favorite-title {
+  @apply text-xl font-bold mb-4;
+}
+
+.favorite-list {
+  @apply space-y-3;
+}
+
+.favorite-city {
+  @apply flex items-center justify-between border border-gray-200 p-3 rounded-lg;
+}
+
+.favorite-city-button {
+  @apply text-left font-medium;
+}
+
+.delete-button {
+  @apply bg-red-500 text-white px-3 py-1 rounded-md;
+}
+
+.empty-message {
+  @apply text-gray-500;
+}
+
+/* Messages */
+
+.loading-message {
+  @apply text-center text-blue-600 mb-4;
+}
+
+.error-message {
+  @apply text-center text-red-600 mb-4;
+}
