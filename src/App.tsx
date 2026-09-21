@@ -19,15 +19,11 @@ function App() {
 
       return savedCities ? JSON.parse(savedCities) : [];
     });
-const {
-  data: weather,
-  isLoading,
-  error,
-  refetch,
-} = useQuery({
+const {data: weather, isLoading, error, refetch,} = useQuery({
   queryKey: weatherKeys.city(searchCity),
   queryFn: () => getWeather(searchCity),
   enabled: !!searchCity.trim(),
+  refetchOnWindowFocus: true,
 });
 
   useEffect(() => {
@@ -78,9 +74,7 @@ const {
   };
 
 
-  const handleSelectFavorite = (
-  cityName: string
-) => {
+  const handleSelectFavorite = (cityName: string) => {
   setCity(cityName);
 
    if (searchCity.toLowerCase() === cityName.toLowerCase()) {
