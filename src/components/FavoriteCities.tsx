@@ -1,12 +1,13 @@
 import type { FavoriteCity } from "../types/city";
-
+import { convertTemperature } from "../utils/temperature";
 interface FavoriteCitiesProps {
   cities: FavoriteCity[];
+  unit: "C" | "F";
   onDeleteFavorite: (id: string) => void;
   onSelectCity: (city: string) => void;
 }
 
-function FavoriteCities({cities,onDeleteFavorite,onSelectCity,}: FavoriteCitiesProps) {
+function FavoriteCities({cities,unit,onDeleteFavorite,onSelectCity,}: FavoriteCitiesProps) {
   return (  
     <div className="favorite-cities">
       <h2 className="favorite-title">
@@ -30,7 +31,7 @@ function FavoriteCities({cities,onDeleteFavorite,onSelectCity,}: FavoriteCitiesP
                 }
                 className="favorite-city-button"
               >
-                {city.name} - {city.temperature}°C
+                {city.name} - {convertTemperature(city.temperature, unit)}°{unit}
               </button>
 
               <button

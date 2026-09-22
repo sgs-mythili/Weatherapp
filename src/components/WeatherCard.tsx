@@ -1,39 +1,35 @@
 import type { WeatherData } from "../types/weather";
+import { convertTemperature } from "../utils/temperature";
 
 interface WeatherCardProps {
   weather: WeatherData;
+  unit: "C" | "F";
   onAddFavorite: (weather: WeatherData) => void;
 }
 
 function WeatherCard({
   weather,
+  unit,
   onAddFavorite,
 }: WeatherCardProps) {
   return (
     <div className="weather-card">
-      <h2 className="weather-city">
-        {weather.city}
-      </h2>
+      <h2 className="weather-city">{weather.city}</h2>
 
       <p className="weather-temperature">
-        {weather.temperature}°C
+        {convertTemperature(weather.temperature, unit)}°{unit}
       </p>
 
-      <p className="weather-description">
-        {weather.description}
-      </p>
+      <p className="weather-description">{weather.description}</p>
 
       <div className="weather-details">
-        <p>
-          Humidity: {weather.humidity}%
-        </p>
+        <p>Humidity: {weather.humidity}%</p>
+
+        <p>Wind: {weather.windSpeed} km/h</p>
 
         <p>
-          Wind: {weather.windSpeed} km/h
-        </p>
-
-        <p>
-          Feels like: {weather.feelsLike}°C
+          Feels like: {" "}
+          {convertTemperature(weather.feelsLike, unit)}°{unit}
         </p>
       </div>
 

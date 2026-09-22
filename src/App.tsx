@@ -10,29 +10,30 @@ import type { FavoriteCity } from "./types/city";
 
 import { getWeather } from "./services/weatherApi";
 import { weatherKeys } from "./queries/weatherkeys"
+import { useWeatherStore } from "./store/weatherStore";
 function App() {
   const [city, setCity] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [favoriteError, setFavoriteError] = useState("");
-  const [favoriteCities, setFavoriteCities] = useState<FavoriteCity[]>(() => {
-      const savedCities =  localStorage.getItem("favoriteCities");
-
-      return savedCities ? JSON.parse(savedCities) : [];
-    });
 const {data: weather, isLoading, error, refetch,} = useQuery({
   queryKey: weatherKeys.city(searchCity),
   queryFn: () => getWeather(searchCity),
   enabled: !!searchCity.trim(),
   refetchOnWindowFocus: true,
 });
+  const favoriteCities = useWeatherStore(
+  (state) => state.favoriteCities
+);
+  const addFavorite = useWeatherStore(
+  (state) => state.actions.addFavorite
+);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "favoriteCities",
-      JSON.stringify(favoriteCities)
-    );
-  }, [favoriteCities]);
-
+  const removeFavorite = useWeatherStore(
+  (state) => state.actions.removeFavorite
+);
+  const updateFavoriteTemperature = useWeatherStore(
+  (state) => state.actions.updateFavoriteTemperature
+);
   const handleSearch = () => {
   if (!city.trim()) {
     return;
@@ -58,19 +59,12 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
       temperature: weatherData.temperature,
     };
 
-    setFavoriteCities((currentCities) => [
-        ...currentCities,
-        newCity,
-      ]
-    );
+    addFavorite(newCity);
+
   };
 
   const handleDeleteFavorite = ( id: string ) => {
-    setFavoriteCities((currentCities) =>
-      currentCities.filter(
-        (city) => city.id !== id
-      )
-    );
+   removeFavorite(id);
   };
 
 
@@ -84,26 +78,32 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
   setSearchCity(cityName);
 };
 
+  const unit = useWeatherStore(
+  (state) => state.unit
+);
+  
+  const toggleUnit = useWeatherStore(
+  (state) => state.actions.toggleUnit
+);
+
 useEffect(() => {
   if (!weather) {
     return;
   }
 
-  setFavoriteCities((currentCities) =>
-    currentCities.map((city) =>
-      city.name.toLowerCase() === weather.city.toLowerCase()
-        ? {
-            ...city,
-            temperature: weather.temperature,
-          }
-        : city,
-    ),
+  updateFavoriteTemperature(
+    weather.city,
+    weather.temperature
   );
-}, [weather]);
+}, [weather, updateFavoriteTemperature]);
 
   return (
     <div className="weather-container">
       <h1 className="weather-title">Weather Dashboard</h1>
+
+      <button onClick={toggleUnit} className="unit-button">
+        Switch to °{unit === "C" ? "F" : "C"}
+      </button>
 
       <SearchBar city={city} onCityChange={setCity} onSearch={handleSearch} />
 
@@ -118,11 +118,16 @@ useEffect(() => {
       {favoriteError && <p className="error-message">{favoriteError}</p>}
 
       {weather && !isLoading && (
-        <WeatherCard weather={weather} onAddFavorite={handleAddFavorite} />
+        <WeatherCard
+          weather={weather}
+          unit={unit}
+          onAddFavorite={handleAddFavorite}
+        />
       )}
 
       <FavoriteCities
         cities={favoriteCities}
+        unit={unit}
         onDeleteFavorite={handleDeleteFavorite}
         onSelectCity={handleSelectFavorite}
       />
