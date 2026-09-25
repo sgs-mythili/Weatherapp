@@ -8,7 +8,7 @@ import FavoriteCities from "./components/FavoriteCities";
 import type { WeatherData } from "./types/weather";
 import type { FavoriteCity } from "./types/city";
 
-import { getWeather } from "./services/weatherApi";
+import { getWeather, addFavorite as addFavoriteApi } from "./services/weatherApi";
 import { weatherKeys } from "./queries/weatherkeys"
 import { useWeatherStore } from "./store/weatherStore";
 function App() {
@@ -43,15 +43,21 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
 };
 
 
-  const handleAddFavorite = ( weatherData: WeatherData ) => {
-    const alreadyExists = favoriteCities.some( (city) => city.name.toLowerCase() === weatherData.city.toLowerCase());
+  const handleAddFavorite = async (weatherData: WeatherData) => {
+  const alreadyExists = favoriteCities.some(
+    (city) =>
+      city.name.toLowerCase() === weatherData.city.toLowerCase()
+  );
 
-    if (alreadyExists) {
-      setFavoriteError("City is already in favorites");
-      return;
-    }
+  if (alreadyExists) {
+    setFavoriteError("City is already in favorites");
+    return;
+  }
 
-    setFavoriteError("");
+  setFavoriteError("");
+
+  try {
+    await addFavoriteApi(weatherData.city);
 
     const newCity: FavoriteCity = {
       id: Date.now().toString(),
@@ -60,8 +66,14 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
     };
 
     addFavorite(newCity);
-
-  };
+  } catch (error) {
+    setFavoriteError(
+      error instanceof Error
+        ? error.message
+        : "Unable to add favorite"
+    );
+  }
+};
 
   const handleDeleteFavorite = ( id: string ) => {
    removeFavorite(id);
