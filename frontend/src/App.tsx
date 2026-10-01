@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
+import {useQuery, useQueryClient, useMutation} from "@tanstack/react-query";
 import SearchBar from "./components/SearchComponent";
 import WeatherCard from "./components/WeatherCard";
 import FavoriteCities from "./components/FavoriteCities";
 
 import type { WeatherData } from "./types/weather";
-import type { FavoriteCity } from "./types/city";
+import type { FavoriteCity, FavoriteCityResponse,} from "./types/city";
 
-import { getWeather, addFavorite as addFavoriteApi } from "./services/weatherApi";
+import {getWeather,addFavorite as addFavoriteApi,getFavorites, updateFavorite as updateFavoriteApi, deleteFavorite as deleteFavoriteApi} from "./services/weatherApi";
 import { weatherKeys } from "./queries/weatherkeys"
 import { useWeatherStore } from "./store/weatherStore";
+import FavoriteForm from "./components/FavoriteForm";
+import {favoriteSchema,type FavoriteFormData,} from "./schemas/favoriteSchema";
+
 function App() {
   const [city, setCity] = useState("");
   const [searchCity, setSearchCity] = useState("");
@@ -21,19 +24,73 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
   enabled: !!searchCity.trim(),
   refetchOnWindowFocus: true,
 });
-  const favoriteCities = useWeatherStore(
-  (state) => state.favoriteCities
-);
-  const addFavorite = useWeatherStore(
-  (state) => state.actions.addFavorite
-);
+const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+const [editingId, setEditingId] = useState<string | null>(null);
+const [formDefaults, setFormDefaults] = useState<FavoriteFormData>({
+  city: "",
+  nickname: "",
+  notes: "",
+});
+ const queryClient = useQueryClient();
+const { data: favoritesData} = useQuery({
+  queryKey: ["favorites"],
+  queryFn: getFavorites,
+});
+const favoriteCities: FavoriteCity[] =favoritesData?.data.map((favorite: FavoriteCityResponse) => ({
+      id: favorite.id.toString(),
+      name: favorite.city,
+      temperature: Number(favorite.temperature),
+      nickname: favorite.nickname,
+      notes: favorite.notes
+    })
+  ) ?? [];
+const addFavoriteMutation = useMutation({
+  mutationFn: (data: {
+    city: string;
+    temperature: number;
+    nickname: string;
+    notes: string;
+  }) =>
+    addFavoriteApi(
+      data.city,
+      data.temperature,
+      data.nickname,
+      data.notes
+    ),
 
-  const removeFavorite = useWeatherStore(
-  (state) => state.actions.removeFavorite
-);
-  const updateFavoriteTemperature = useWeatherStore(
-  (state) => state.actions.updateFavoriteTemperature
-);
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ["favorites"],
+    });
+
+    setFormMode(null);
+    setFavoriteError("");
+  },
+
+  onError: (error) => {
+    setFavoriteError(
+      error instanceof Error
+        ? error.message
+        : "Unable to add favorite"
+    );
+  },
+});
+const updateFavoriteMutation = useMutation({
+  mutationFn: (data: FavoriteFormData) =>
+    updateFavoriteApi(editingId as string, data.nickname??"", data.notes??""),
+  onSuccess: async () => {
+    await queryClient.invalidateQueries({ queryKey: ["favorites"] });
+    setFormMode(null);
+    setEditingId(null);
+    setFavoriteError("");
+  },
+  onError: (error) => {
+    setFavoriteError(
+      error instanceof Error ? error.message : "Unable to update favorite"
+    );
+  },
+});
+
   const handleSearch = () => {
   if (!city.trim()) {
     return;
@@ -42,8 +99,8 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
   setSearchCity(city);
 };
 
-
-  const handleAddFavorite = async (weatherData: WeatherData) => {
+ 
+  const handleAddFavorite = (weatherData: WeatherData) => {
   const alreadyExists = favoriteCities.some(
     (city) =>
       city.name.toLowerCase() === weatherData.city.toLowerCase()
@@ -56,28 +113,29 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
 
   setFavoriteError("");
 
+  addFavoriteMutation.mutate({
+    city: weatherData.city,
+    temperature: weatherData.temperature,
+    nickname: "",
+    notes: "",
+  });
+};
+
+  const handleDeleteFavorite = async (id: string) => {
   try {
-    await addFavoriteApi(weatherData.city, weatherData.temperature);
+    await deleteFavoriteApi(id);
 
-    const newCity: FavoriteCity = {
-      id: Date.now().toString(),
-      name: weatherData.city,
-      temperature: weatherData.temperature,
-    };
-
-    addFavorite(newCity);
+    await queryClient.invalidateQueries({
+      queryKey: ["favorites"],
+    });
   } catch (error) {
     setFavoriteError(
       error instanceof Error
         ? error.message
-        : "Unable to add favorite"
+        : "Unable to delete favorite"
     );
   }
 };
-
-  const handleDeleteFavorite = ( id: string ) => {
-   removeFavorite(id);
-  };
 
 
   const handleSelectFavorite = (cityName: string) => {
@@ -98,17 +156,39 @@ const {data: weather, isLoading, error, refetch,} = useQuery({
   (state) => state.actions.toggleUnit
 );
 
-useEffect(() => {
-  if (!weather) {
+const openEditForm = (city: FavoriteCity) => {
+  setFormDefaults({
+    city: city.name,
+    nickname: city.nickname ?? "",
+    notes: city.notes ?? "",
+  });
+  setEditingId(city.id);
+  setFormMode("edit");
+  setFavoriteError("");
+};
+const handleFormSubmit = (data: FavoriteFormData) => {
+  if (formMode === "edit") {
+    updateFavoriteMutation.mutate(data);
     return;
   }
 
-  updateFavoriteTemperature(
-    weather.city,
-    weather.temperature
+  const alreadyExists = favoriteCities.some(
+    (city) =>
+      city.name.toLowerCase() === data.city.toLowerCase()
   );
-}, [weather, updateFavoriteTemperature]);
 
+  if (alreadyExists) {
+    setFavoriteError("City is already in favorites");
+    return;
+  }
+
+  addFavoriteMutation.mutate({
+  city: data.city,
+  temperature: weather?.temperature ?? 0,
+  nickname: data.nickname ?? "",
+  notes: data.notes ?? "",
+});
+}
   return (
     <div className="weather-container">
       <h1 className="weather-title">Weather Dashboard</h1>
@@ -142,7 +222,20 @@ useEffect(() => {
         unit={unit}
         onDeleteFavorite={handleDeleteFavorite}
         onSelectCity={handleSelectFavorite}
+        onEditFavorite={openEditForm}
       />
+
+      {formMode && (
+        <FavoriteForm
+          mode={formMode}
+          defaultValues={formDefaults}
+          onSubmit={handleFormSubmit}
+          onCancel={() => setFormMode(null)}
+          isSubmitting={
+            addFavoriteMutation.isPending || updateFavoriteMutation.isPending
+          }
+        />
+      )}
     </div>
   );
 }

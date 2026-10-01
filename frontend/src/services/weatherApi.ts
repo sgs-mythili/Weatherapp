@@ -1,4 +1,5 @@
 import type { WeatherData } from "../types/weather";
+import type { FavoriteCityResponse } from "../types/city";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const TENANT_ID = import.meta.env.VITE_TENANT_ID;
@@ -30,18 +31,26 @@ export async function getWeather(city: string): Promise<WeatherData> {
   };
 }
 
-export async function addFavorite(city: string,temperature: number) {
+export async function addFavorite(
+  city: string,
+  temperature: number,
+  nickname: string,
+  notes: string
+
+) {
   const response = await fetch(`${API_URL}/favorites`, {
     method: "POST",
 
     headers: {
       "Content-Type": "application/json",
-      "x-tenant-id": "tenant-123",
+      "x-tenant-id": TENANT_ID,
     },
 
     body: JSON.stringify({
       city,
       temperature,
+      nickname,
+      notes
     }),
   });
 
@@ -53,3 +62,71 @@ export async function addFavorite(city: string,temperature: number) {
 
   return data;
 }
+
+export async function getFavorites(): Promise<{
+  status: string;
+  data: FavoriteCityResponse[];
+}> {
+  const response = await fetch(`${API_URL}/favorites`, {
+    method: "GET",
+
+    headers: {
+      "x-tenant-id": TENANT_ID,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Unable to fetch favorites");
+  }
+
+  return data;
+}
+
+export async function deleteFavorite(id: string) {
+  const response = await fetch(`${API_URL}/favorites/${id}`, {
+    method: "DELETE",
+
+    headers: {
+      "x-tenant-id": TENANT_ID,
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Unable to delete favorite");
+  }
+
+  return data;
+}
+
+export async function updateFavorite(id: string,nickname: string,notes: string) {
+  const response = await fetch(`${API_URL}/favorites/${id}`,{
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+        "x-tenant-id": TENANT_ID,
+      },
+
+      body: JSON.stringify({
+        nickname,
+        notes,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Unable to update favorite"
+    );
+  }
+
+  return data;
+}
+
+

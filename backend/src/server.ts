@@ -4,8 +4,9 @@ import Boom from "@hapi/boom";
 import { validateTenant } from "./utils/validateTenant";
 import { getWeather } from "./services/weatherService";
 import { weatherRoute } from "./routes/weather";
-import { favoritesRoute } from "./routes/favorites";
+import { favoritesRoute, getFavoritesRoute, updateFavoriteRoute, deleteFavoriteRoute} from "./routes/favorites";
 import { config } from "./config/env";
+import { pool } from "./database/db";
 const favorites: string[] = [];
 
 const server = Hapi.server({  
@@ -22,9 +23,13 @@ const server = Hapi.server({
 
 server.route(weatherRoute);
 server.route(favoritesRoute);
-
+server.route(getFavoritesRoute);
+server.route(updateFavoriteRoute);
+server.route(deleteFavoriteRoute);
 const start = async () => {
   try {
+    await pool.query("SELECT NOW()");
+    console.log("PostgreSQL connected successfully");
     await server.start();
 
     console.log(`Server running at: ${server.info.uri}`);
