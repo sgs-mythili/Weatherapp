@@ -102,23 +102,19 @@ export async function deleteFavorite(id: string) {
   return data;
 }
 
-export async function updateFavorite(
-  id: string,
-  updates: {
-    city?: string;
-    nickname?: string;
-    notes?: string;
-  }
-) {
+export async function updateFavorite(id: string,nickname: string,notes: string) {
   const response = await fetch(`${API_URL}/favorites/${id}`,{
-      method: "PATCH",
+      method: "PUT",
 
       headers: {
         "Content-Type": "application/json",
         "x-tenant-id": TENANT_ID,
       },
 
-      body: JSON.stringify(updates),
+      body: JSON.stringify({
+        nickname,
+        notes,
+      }),
     }
   );
 
