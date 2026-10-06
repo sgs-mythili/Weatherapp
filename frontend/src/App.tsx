@@ -8,7 +8,7 @@ import FavoriteCities from "./components/FavoriteCities";
 import type { WeatherData } from "./types/weather";
 import type { FavoriteCity, FavoriteCityResponse,} from "./types/city";
 
-import {getWeather,addFavorite as addFavoriteApi,getFavorites, updateFavorite as updateFavoriteApi, deleteFavorite as deleteFavoriteApi} from "./services/weatherApi";
+import {getWeather,addFavorite as addFavoriteApi,getFavorites, updateFavorite as updateFavoriteApi, deleteFavorite as deleteFavoriteApi, patchFavorite as patchFavoriteApi} from "./services/weatherApi";
 import { weatherKeys } from "./queries/weatherkeys"
 import { useWeatherStore } from "./store/weatherStore";
 import FavoriteForm from "./components/FavoriteForm";
@@ -75,9 +75,7 @@ const addFavoriteMutation = useMutation({
     );
   },
 });
-const updateFavoriteMutation = useMutation({
-  mutationFn: (data: FavoriteFormData) =>
-    updateFavoriteApi(editingId as string, data.nickname??"", data.notes??""),
+const updateFavoriteMutation = useMutation({mutationFn: (updates: {city?: string;nickname?: string;notes?: string;}) => patchFavoriteApi(editingId as string, updates),
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["favorites"] });
     setFormMode(null);
@@ -168,26 +166,24 @@ const openEditForm = (city: FavoriteCity) => {
 };
 const handleFormSubmit = (data: FavoriteFormData) => {
   if (formMode === "edit") {
-    updateFavoriteMutation.mutate(data);
+  const updates: {city?: string;nickname?: string;notes?: string;} = {};
+  if (data.city !== formDefaults.city) {
+    updates.city = data.city;
+  }
+  if ((data.nickname ?? "") !== (formDefaults.nickname ?? "")) {
+    updates.nickname = data.nickname ?? "";
+  }
+  if ((data.notes ?? "") !== (formDefaults.notes ?? "")) {
+    updates.notes = data.notes ?? "";
+  }
+  if (Object.keys(updates).length === 0) {
+    setFormMode(null);
+    setEditingId(null);
     return;
   }
-
-  const alreadyExists = favoriteCities.some(
-    (city) =>
-      city.name.toLowerCase() === data.city.toLowerCase()
-  );
-
-  if (alreadyExists) {
-    setFavoriteError("City is already in favorites");
-    return;
-  }
-
-  addFavoriteMutation.mutate({
-  city: data.city,
-  temperature: weather?.temperature ?? 0,
-  nickname: data.nickname ?? "",
-  notes: data.notes ?? "",
-});
+  updateFavoriteMutation.mutate(updates);
+  return;
+}
 }
   return (
     <div className="weather-container">

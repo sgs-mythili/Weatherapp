@@ -129,4 +129,32 @@ export async function updateFavorite(id: string,nickname: string,notes: string) 
   return data;
 }
 
+export async function patchFavorite(
+  id: string,
+  updates: {
+    city?: string;
+    nickname?: string;
+    notes?: string;
+  }
+) {
+  const response = await fetch(`${API_URL}/favorites/${id}`, {
+    method: "PATCH",
+
+    headers: {
+      "Content-Type": "application/json",
+      "x-tenant-id": TENANT_ID,
+    },
+
+    body: JSON.stringify(updates),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Unable to update favorite");
+  }
+
+  return data;
+}
+
 

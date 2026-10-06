@@ -1,8 +1,8 @@
 import Hapi from "@hapi/hapi";
 import Joi from "joi";
+import Boom from "@hapi/boom";
 import { validateTenant } from "../utils/validateTenant";
-import { pool } from "../database/db";
-import  Boom  from "@hapi/boom";
+import {createFavorite,getFavorites,updateFavorite,patchFavorite,deleteFavorite,} from "../services/favoriteService";
 
 export const favoritesRoute: Hapi.ServerRoute = {
   method: "POST",
@@ -14,43 +14,33 @@ export const favoritesRoute: Hapi.ServerRoute = {
         city: Joi.string().trim().min(1).required(),
         temperature: Joi.number().required(),
         nickname: Joi.string().trim().allow("").optional(),
-        notes: Joi.string().trim().max(100).allow("").optional()
+        notes: Joi.string().trim().max(100).allow("").optional(),
       }),
     },
   },
 
   handler: async (request, h) => {
     try{
-    const tenantId = validateTenant(request);
+      const tenantId = validateTenant(request);
 
-    const { city, temperature, nickname, notes } = request.payload as {
-      city: string;
-      temperature: number;
-      nickname?: string;
-      notes?: string;
-    };
-    
-    console.log("Favorite payload:", {
-      city,
-      temperature,
-      nickname,
-      notes,
-      tenantId,
-    })
+      const { city, temperature, nickname, notes } = request.payload as {
+        city: string;
+        temperature: number;
+        nickname?: string;
+        notes?: string;
+      };
 
-    const result = await pool.query(
-      `INSERT INTO favorites (city, temperature, tenant_id, nickname, notes)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, city, temperature, nickname, notes, tenant_id, created_at`,
-      [city, temperature, tenantId, nickname || null, notes || null]
-    );
-   console.log("Inserted favorite:", result.rows[0])
-    return h.response({
-        status: "success",
-        message: "Favorite city added",
-        data: result.rows[0],
-      })
-      .code(201);
+      console.log("Favorite payload:", {city,temperature,nickname,notes,tenantId,});
+
+      const favorite = await createFavorite( city, temperature, tenantId, nickname, notes);
+      console.log("Inserted favorite:", favorite);
+
+      return h.response({
+          status: "success",
+          message: "Favorite city added",
+          data: favorite,
+        })
+        .code(201);
     }catch(error){
       console.error("Error adding favorite city:", error);
       throw error 
@@ -65,17 +55,11 @@ export const getFavoritesRoute: Hapi.ServerRoute = {
   handler: async (request, h) => {
     const tenantId = validateTenant(request);
 
-    const result = await pool.query(
-      `SELECT id, city, temperature, nickname, notes, tenant_id, created_at
-       FROM favorites
-       WHERE tenant_id = $1
-       ORDER BY created_at DESC`,
-      [tenantId]
-    );
+    const favorites = await getFavorites(tenantId);
 
     return h.response({
       status: "success",
-      data: result.rows,
+      data: favorites,
     });
   },
 };
@@ -87,7 +71,7 @@ export const updateFavoriteRoute: Hapi.ServerRoute = {
   options: {
     validate: {
       params: Joi.object({
-          id: Joi.number().integer().required(),
+        id: Joi.number().integer().required(),
       }),
 
       payload: Joi.object({
@@ -109,38 +93,65 @@ export const updateFavoriteRoute: Hapi.ServerRoute = {
       notes?: string;
     };
 
-    const result = await pool.query(
-      `UPDATE favorites
-       SET nickname = $1,
-           notes = $2
-       WHERE id = $3
-       AND tenant_id = $4
-       RETURNING
-         id,
-         city,
-         temperature,
-         nickname,
-         notes,
-         tenant_id,
-         created_at`,
-      [
-        nickname || null,
-        notes || null,
-        id,
-        tenantId,
-      ]
-    );
+    const favorite = await updateFavorite(id, tenantId, nickname, notes);
 
-    if (result.rowCount === 0) {
-      throw Boom.notFound(
-        "Favorite city not found"
-      );
+    if (!favorite) {
+      throw Boom.notFound("Favorite city not found");
     }
 
     return h.response({
       status: "success",
       message: "Favorite city updated",
-      data: result.rows[0],
+      data: favorite,
+    });
+  },
+};
+
+export const patchFavoriteRoute: Hapi.ServerRoute = {
+  method: "PATCH",
+  path: "/favorites/{id}",
+
+  options: {
+    validate: {
+      params: Joi.object({
+        id: Joi.number().integer().required(),
+      }),
+
+      payload: Joi.object({
+        city: Joi.string().trim().min(1).optional(),
+        nickname: Joi.string().trim().allow("").optional(),
+        notes: Joi.string().trim().max(100).allow("").optional(),
+      }).min(1),
+    },
+  },
+
+  handler: async (request, h) => {
+    const tenantId = validateTenant(request);
+
+    const { id } = request.params as {
+      id: number;
+    };
+
+    const { city, nickname, notes } = request.payload as {
+      city?: string;
+      nickname?: string;
+      notes?: string;
+    };
+
+    const favorite = await patchFavorite(id, tenantId, {
+      city,
+      nickname,
+      notes,
+    });
+
+    if (!favorite) {
+      throw Boom.notFound("Favorite city not found");
+    }
+
+    return h.response({
+      status: "success",
+      message: "Favorite city updated",
+      data: favorite,
     });
   },
 };
@@ -165,25 +176,17 @@ export const deleteFavoriteRoute: Hapi.ServerRoute = {
       id: number;
     };
 
-    const result = await pool.query(
-      `DELETE FROM favorites
-       WHERE id = $1
-       AND tenant_id = $2
-       RETURNING id`,
-      [id, tenantId]
-    );
+    const deletedId = await deleteFavorite(id, tenantId);
 
-    if (result.rowCount === 0) {
-      throw Boom.notFound(
-        "Favorite city not found"
-      );
+    if (!deletedId) {
+      throw Boom.notFound("Favorite city not found");
     }
 
     return h.response({
       status: "success",
       message: "Favorite city deleted",
       data: {
-        id,
+        id: deletedId,
       },
     });
   },
