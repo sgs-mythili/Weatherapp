@@ -145,6 +145,91 @@ export const updateFavoriteRoute: Hapi.ServerRoute = {
   },
 };
 
+export const patchFavoriteRoute: Hapi.ServerRoute = {
+  method: "PATCH",
+  path: "/favorites/{id}",
+
+  options: {
+    validate: {
+      params: Joi.object({
+        id: Joi.number().integer().required(),
+      }),
+
+      payload: Joi.object({
+        city: Joi.string().trim().min(1).optional(),
+        nickname: Joi.string().trim().allow("").optional(),
+        notes: Joi.string().trim().max(100).allow("").optional(),
+      }).min(1),
+    },
+  },
+
+  handler: async (request, h) => {
+    const tenantId = validateTenant(request);
+
+    const { id } = request.params as {
+      id: number;
+    };
+
+    const { city, nickname, notes } = request.payload as {
+      city?: string;
+      nickname?: string;
+      notes?: string;
+    };
+
+    const fields: string[] = [];
+    const values: Array<string | number | null> = [];
+
+    if (city !== undefined) {
+      values.push(city);
+      fields.push(`city = $${values.length}`);
+    }
+
+    if (nickname !== undefined) {
+      values.push(nickname || null);
+      fields.push(`nickname = $${values.length}`);
+    }
+
+    if (notes !== undefined) {
+      values.push(notes || null);
+      fields.push(`notes = $${values.length}`);
+    }
+
+    if (fields.length === 0) {
+      throw Boom.badRequest("At least one field is required");
+    }
+
+    values.push(id);
+    const idIndex = values.length;
+    values.push(tenantId);
+    const tenantIndex = values.length;
+
+    const result = await pool.query(
+      `UPDATE favorites
+       SET ${fields.join(", ")}
+       WHERE id = $${idIndex}
+       AND tenant_id = $${tenantIndex}
+       RETURNING
+         id,
+         city,
+         temperature,
+         nickname,
+         notes,
+         tenant_id,
+         created_at`,
+      values
+    );
+
+    if (result.rowCount === 0) {
+      throw Boom.notFound("Favorite city not found");
+    }
+
+    return h.response({
+      status: "success",
+      message: "Favorite city updated",
+      data: result.rows[0],
+    });
+  },
+};
 
 export const deleteFavoriteRoute: Hapi.ServerRoute = {
   method: "DELETE",

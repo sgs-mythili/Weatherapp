@@ -76,8 +76,11 @@ const addFavoriteMutation = useMutation({
   },
 });
 const updateFavoriteMutation = useMutation({
-  mutationFn: (data: FavoriteFormData) =>
-    updateFavoriteApi(editingId as string, data.nickname??"", data.notes??""),
+  mutationFn: (updates: {
+    city?: string;
+    nickname?: string;
+    notes?: string;
+  }) => updateFavoriteApi(editingId as string, updates),
   onSuccess: async () => {
     await queryClient.invalidateQueries({ queryKey: ["favorites"] });
     setFormMode(null);
@@ -168,7 +171,31 @@ const openEditForm = (city: FavoriteCity) => {
 };
 const handleFormSubmit = (data: FavoriteFormData) => {
   if (formMode === "edit") {
-    updateFavoriteMutation.mutate(data);
+    const updates: {
+      city?: string;
+      nickname?: string;
+      notes?: string;
+    } = {};
+
+    if (data.city !== formDefaults.city) {
+      updates.city = data.city;
+    }
+
+    if ((data.nickname ?? "") !== (formDefaults.nickname ?? "")) {
+      updates.nickname = data.nickname ?? "";
+    }
+
+    if ((data.notes ?? "") !== (formDefaults.notes ?? "")) {
+      updates.notes = data.notes ?? "";
+    }
+
+    if (Object.keys(updates).length === 0) {
+      setFormMode(null);
+      setEditingId(null);
+      return;
+    }
+
+    updateFavoriteMutation.mutate(updates);
     return;
   }
 
