@@ -52,14 +52,38 @@ export const getFavoritesRoute: Hapi.ServerRoute = {
   method: "GET",
   path: "/favorites",
 
+  options: {
+    validate: {
+      query: Joi.object({
+        page: Joi.number().integer().min(1).default(1),
+
+        limit: Joi.number().integer().min(1).max(100).default(5),
+
+        search: Joi.string().trim().allow("").optional(),
+      }),
+    },
+  },
+
   handler: async (request, h) => {
     const tenantId = validateTenant(request);
 
-    const favorites = await getFavorites(tenantId);
+    const { page, limit, search } = request.query as {
+      page: number;
+      limit: number;
+      search?: string;
+    };
+
+    const favorites = await getFavorites(tenantId, {page,limit,search,});
 
     return h.response({
       status: "success",
-      data: favorites,
+      data: favorites.data,
+      pagination: {
+        totalCount: favorites.totalCount,
+        totalPages: favorites.totalPages,
+        page: favorites.page,
+        limit: favorites.limit,
+      },
     });
   },
 };

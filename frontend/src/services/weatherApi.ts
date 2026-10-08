@@ -63,13 +63,31 @@ export async function addFavorite(
   return data;
 }
 
-export async function getFavorites(): Promise<{
+export async function getFavorites(
+  page = 1,
+  limit = 5,
+  search = ""
+): Promise<{
   status: string;
   data: FavoriteCityResponse[];
+  pagination: {
+    totalCount: number;
+    totalPages: number;
+    page: number;
+    limit: number;
+  };
 }> {
-  const response = await fetch(`${API_URL}/favorites`, {
-    method: "GET",
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
 
+  if (search.trim()) {
+    params.set("search", search.trim());
+  }
+
+  const response = await fetch(`${API_URL}/favorites?${params.toString()}`, {
+    method: "GET",
     headers: {
       "x-tenant-id": TENANT_ID,
     },

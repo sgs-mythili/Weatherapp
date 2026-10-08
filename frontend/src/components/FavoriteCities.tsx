@@ -6,14 +6,46 @@ interface FavoriteCitiesProps {
   onDeleteFavorite: (id: string) => void;
   onSelectCity: (city: string) => void;
   onEditFavorite: (city: FavoriteCity) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  isLoading: boolean;
 }
 
-function FavoriteCities({cities,unit,onDeleteFavorite,onSelectCity,onEditFavorite,}: FavoriteCitiesProps) {
+function FavoriteCities({
+  cities,
+  unit,
+  onDeleteFavorite,
+  onSelectCity,
+  onEditFavorite,
+  search,
+  onSearchChange,
+  page,
+  totalPages,
+  totalCount,
+  onPageChange,
+  isLoading,
+}: FavoriteCitiesProps) {
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+
   return (
     <div className="favorite-cities">
       <h2 className="favorite-title">Cities</h2>
 
-      {cities.length === 0 ? (
+      <input
+        type="text"
+        value={search}
+        onChange={(event) => onSearchChange(event.target.value)}
+        placeholder="Search favorites"
+        className="favorite-search"
+      />
+
+      {isLoading ? (
+        <p className="loading-message">Loading favorites...</p>
+      ) : cities.length === 0 ? (
         <p className="empty-message">No cities added yet.</p>
       ) : (
         <div className="favorite-list">
@@ -52,6 +84,41 @@ function FavoriteCities({cities,unit,onDeleteFavorite,onSelectCity,onEditFavorit
           ))}
         </div>
       )}
+
+      <div className="favorite-pagination">
+        <button
+          type="button"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="page-button"
+        >
+          Previous
+        </button>
+
+        {pages.map((pageNumber) => (
+          <button
+            key={pageNumber}
+            type="button"
+            onClick={() => onPageChange(pageNumber)}
+            className={
+              pageNumber === page ? "page-button active" : "page-button"
+            }
+          >
+            {pageNumber}
+          </button>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => onPageChange(page + 1)}
+          disabled={totalPages === 0 || page >= totalPages}
+          className="page-button"
+        >
+          Next
+        </button>
+
+        <span className="page-count">{totalCount} cities</span>
+      </div>
     </div>
   );
 }

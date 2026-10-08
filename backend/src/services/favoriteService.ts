@@ -1,6 +1,8 @@
 import { pool } from "../database/db";
 import type { Favorite } from "../types/favorite";
+
 const favoriteColumns = "id,city,temperature,nickname,notes,tenant_id,created_at";
+
 export async function createFavorite(
   city: string,
   temperature: number,
@@ -16,16 +18,62 @@ export async function createFavorite(
   );
   return result.rows[0];
 }
-export async function getFavorites(tenantId: string): Promise<Favorite[]> {
+
+export async function getFavorites(
+  tenantId: string, {page,limit,search,}: {page: number;limit: number;search?: string;}): Promise<{
+  data: Favorite[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}> {
+  const offset = (page - 1) * limit;
+  const keyword = search?.trim();
+  const where = ["tenant_id = $1"];
+  const filters: Array<string | number> = [tenantId];
+
+  if (keyword) {
+    const pattern = `%${keyword.replace(/[\\%_]/g, "\\$&")}%`;
+    filters.push(pattern);
+    where.push(
+      `(city ILIKE $${filters.length} OR COALESCE(nickname, '') ILIKE $${filters.length} ESCAPE '\\')`
+    );
+  }
+
+  const whereSql = where.join(" AND ");
+
+  const countResult = await pool.query(
+    `SELECT COUNT(*)
+     FROM favorites
+     WHERE ${whereSql}`,
+    filters
+  );
+
+  const totalCount = Number(countResult.rows[0].count);
+  const totalPages = Math.ceil(totalCount / limit);
+
+  const limitIndex = filters.length + 1;
+  const offsetIndex = filters.length + 2;
+
   const result = await pool.query(
     `SELECT ${favoriteColumns}
      FROM favorites
-     WHERE tenant_id = $1
-     ORDER BY created_at DESC`,
-    [tenantId]
+     WHERE ${whereSql}
+     ORDER BY created_at DESC
+     LIMIT $${limitIndex}
+     OFFSET $${offsetIndex}`,
+    [...filters, limit, offset]
   );
-  return result.rows;
+
+  return {
+    data: result.rows,
+    totalCount,
+    totalPages,
+    page,
+    limit,
+  };
 }
+
 export async function updateFavorite(
   id: number,
   tenantId: string,

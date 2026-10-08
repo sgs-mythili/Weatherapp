@@ -8,21 +8,28 @@ import FavoriteCities from "./components/FavoriteCities";
 import type { WeatherData } from "./types/weather";
 import type { FavoriteCity, FavoriteCityResponse,} from "./types/city";
 
-import {getWeather,addFavorite as addFavoriteApi,getFavorites, updateFavorite as updateFavoriteApi, deleteFavorite as deleteFavoriteApi, patchFavorite as patchFavoriteApi} from "./services/weatherApi";
+import {getWeather,addFavorite as addFavoriteApi,getFavorites, deleteFavorite as deleteFavoriteApi, patchFavorite as patchFavoriteApi} from "./services/weatherApi";
 import { weatherKeys } from "./queries/weatherkeys"
 import { useWeatherStore } from "./store/weatherStore";
 import FavoriteForm from "./components/FavoriteForm";
-import {favoriteSchema,type FavoriteFormData,} from "./schemas/favoriteSchema";
+import {type FavoriteFormData,} from "./schemas/favoriteSchema";
 
 function App() {
   const [city, setCity] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [favoriteError, setFavoriteError] = useState("");
-const {data: weather, isLoading, error, refetch,} = useQuery({
+  const [favoritePage, setFavoritePage] = useState(1);
+  const [favoriteSearch, setFavoriteSearch] = useState("");
+  const favoriteLimit = 5;
+  const {data: weather, isLoading, error, refetch,} = useQuery({
   queryKey: weatherKeys.city(searchCity),
   queryFn: () => getWeather(searchCity),
   enabled: !!searchCity.trim(),
   refetchOnWindowFocus: true,
+});
+  const { data: favoritesData, isLoading: favoritesLoading } = useQuery({
+  queryKey: ["favorites", favoritePage, favoriteLimit, favoriteSearch],
+  queryFn: () => getFavorites(favoritePage, favoriteLimit, favoriteSearch),
 });
 const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
 const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,11 +39,7 @@ const [formDefaults, setFormDefaults] = useState<FavoriteFormData>({
   notes: "",
 });
  const queryClient = useQueryClient();
-const { data: favoritesData} = useQuery({
-  queryKey: ["favorites"],
-  queryFn: getFavorites,
-});
-const favoriteCities: FavoriteCity[] =favoritesData?.data.map((favorite: FavoriteCityResponse) => ({
+ const favoriteCities: FavoriteCity[] =favoritesData?.data.map((favorite: FavoriteCityResponse) => ({
       id: favorite.id.toString(),
       name: favorite.city,
       temperature: Number(favorite.temperature),
@@ -59,6 +62,7 @@ const addFavoriteMutation = useMutation({
     ),
 
   onSuccess: async () => {
+    setFavoritePage(1);
     await queryClient.invalidateQueries({
       queryKey: ["favorites"],
     });
@@ -122,6 +126,10 @@ const updateFavoriteMutation = useMutation({mutationFn: (updates: {city?: string
   const handleDeleteFavorite = async (id: string) => {
   try {
     await deleteFavoriteApi(id);
+
+    if(favoriteCities.length === 1 && favoritePage > 1) {
+      setFavoritePage(favoritePage - 1);
+    }
 
     await queryClient.invalidateQueries({
       queryKey: ["favorites"],
@@ -219,6 +227,16 @@ const handleFormSubmit = (data: FavoriteFormData) => {
         onDeleteFavorite={handleDeleteFavorite}
         onSelectCity={handleSelectFavorite}
         onEditFavorite={openEditForm}
+        search={favoriteSearch}
+        onSearchChange={(value:any) => {
+          setFavoriteSearch(value);
+          setFavoritePage(1);
+        }}
+        page={favoritesData?.pagination.page ?? favoritePage}
+        totalPages={favoritesData?.pagination.totalPages ?? 0}
+        totalCount={favoritesData?.pagination.totalCount ?? 0}
+        onPageChange={setFavoritePage}
+        isLoading={favoritesLoading}
       />
 
       {formMode && (
