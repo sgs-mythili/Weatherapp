@@ -215,3 +215,39 @@
 .page-count {
   @apply text-sm text-gray-500 ml-2;
 }
+
+.favorite-grid-wrap {
+  @apply overflow-x-auto;
+}
+
+.favorite-grid {
+  @apply w-full border-collapse text-sm;
+}
+
+.favorite-grid th {
+  @apply text-left border-b border-gray-200 px-3 py-2 text-gray-500 font-medium;
+}
+
+.favorite-grid td {
+  @apply border-b border-gray-100 px-3 py-3 align-middle;
+}
+
+.favorite-grid-actions {
+  @apply flex gap-2;
+}
+
+.favorite-grid .edit-button {
+  @apply bg-blue-500 text-white px-3 py-1 rounded-md;
+}
+
+.favorite-grid .edit-button:hover {
+  @apply bg-blue-600;
+}
+
+.favorite-grid .delete-button {
+  @apply bg-red-500 text-white px-3 py-1 rounded-md;
+}
+
+.favorite-grid .delete-button:hover {
+  @apply bg-red-600;
+}
