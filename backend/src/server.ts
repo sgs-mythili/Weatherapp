@@ -6,8 +6,8 @@ import { getWeather } from "./services/weatherService";
 import { weatherRoute } from "./routes/weather";
 import { favoritesRoute, getFavoritesRoute, updateFavoriteRoute, deleteFavoriteRoute, patchFavoriteRoute} from "./routes/favorites";
 import { config } from "./config/env";
-import { pool } from "./database/db";
 const favorites: string[] = [];
+import {sequelize} from "./database/db";
 
 const server = Hapi.server({  
   port: config.port,
@@ -29,7 +29,7 @@ server.route(deleteFavoriteRoute);
 server.route(patchFavoriteRoute);
 const start = async () => {
   try {
-    await pool.query("SELECT NOW()");
+    await sequelize.authenticate();
     console.log("PostgreSQL connected successfully");
     await server.start();
 

@@ -65,7 +65,7 @@ export async function addFavorite(
 
 export async function getFavorites(
   page = 1,
-  limit = 5,
+  limit : number | "all" = 5,
   search = ""
 ): Promise<{
   status: string;

@@ -1,96 +1,125 @@
-import { pool } from "../database/db";
-import type { Favorite } from "../types/favorite";
+import { Op, type WhereOptions } from "sequelize";
+import FavoriteModel from "../models/favoriteModel";
 
-const favoriteColumns = "id,city,temperature,nickname,notes,tenant_id,created_at";
-
+// CREATE
 export async function createFavorite(
   city: string,
   temperature: number,
   tenantId: string,
   nickname?: string,
   notes?: string
-): Promise<Favorite> {
-  const result = await pool.query(
-    `INSERT INTO favorites (city, temperature, tenant_id, nickname, notes)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING ${favoriteColumns}`,
-    [city, temperature, tenantId, nickname || null, notes || null]
-  );
-  return result.rows[0];
+) {
+  const favorite = await FavoriteModel.create({
+    city,
+    temperature,
+    tenant_id: tenantId,
+    nickname: nickname || null,
+    notes: notes || null,
+  });
+
+  return favorite.get({ plain: true });
 }
 
+// GET WITH PAGINATION AND SEARCH
 export async function getFavorites(
-  tenantId: string, {page,limit,search,}: {page: number;limit: number;search?: string;}): Promise<{
-  data: Favorite[];
-  totalCount: number;
-  totalPages: number;
-  page: number;
-  limit: number;
-}> {
-  const offset = (page - 1) * limit;
-  const keyword = search?.trim();
-  const where = ["tenant_id = $1"];
-  const filters: Array<string | number> = [tenantId];
-
-  if (keyword) {
-    const pattern = `%${keyword.replace(/[\\%_]/g, "\\$&")}%`;
-    filters.push(pattern);
-    where.push(
-      `(city ILIKE $${filters.length} OR COALESCE(nickname, '') ILIKE $${filters.length} ESCAPE '\\')`
-    );
+  tenantId: string,
+  {
+    page,
+    limit,
+    search,
+  }: {
+    page: number;
+    limit: number| "all";
+    search?: string;
   }
+) {
+  const keyword = search?.trim();
 
-  const whereSql = where.join(" AND ");
+  const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : "";
 
-  const countResult = await pool.query(
-    `SELECT COUNT(*)
-     FROM favorites
-     WHERE ${whereSql}`,
-    filters
-  );
+const where: WhereOptions = keyword
+  ? {
+      [Op.and]: [
+        { tenant_id: tenantId },
+        {
+          [Op.or]: [
+            {
+              city: {
+                [Op.iLike]: pattern,
+              },
+            },
+            {
+              nickname: {
+                [Op.iLike]: pattern,
+              },
+            },
+          ],
+        },
+      ],
+    }
+  : {
+      tenant_id: tenantId,
+    };
 
-  const totalCount = Number(countResult.rows[0].count);
-  const totalPages = Math.ceil(totalCount / limit);
+  
+  const isAll = limit === "all";
 
-  const limitIndex = filters.length + 1;
-  const offsetIndex = filters.length + 2;
+  const queryOptions = {
+    where,
+    order: [
+      ["created_at", "DESC"],
+      ["id", "DESC"],
+    ] as [string, "DESC"][],
+    ...(!isAll
+      ? {
+          limit,
+          offset: (page - 1) * limit,
+        }
+      : {}),
+  };
 
-  const result = await pool.query(
-    `SELECT ${favoriteColumns}
-     FROM favorites
-     WHERE ${whereSql}
-     ORDER BY created_at DESC
-     LIMIT $${limitIndex}
-     OFFSET $${offsetIndex}`,
-    [...filters, limit, offset]
-  );
+   const { count, rows } =
+    await FavoriteModel.findAndCountAll(queryOptions);
+
 
   return {
-    data: result.rows,
-    totalCount,
-    totalPages,
+    data: rows.map((favorite) =>
+      favorite.get({ plain: true })
+    ),
+    totalCount: count,
+    totalPages: isAll ? 1 : Math.ceil(count / (typeof limit === "number" ? limit : 5)),
     page,
     limit,
   };
 }
 
+// PUT
 export async function updateFavorite(
   id: number,
   tenantId: string,
   nickname?: string,
   notes?: string
-): Promise<Favorite | null> {
-  const result = await pool.query(
-    `UPDATE favorites
-     SET nickname = $1,
-         notes = $2
-     WHERE id = $3
-     AND tenant_id = $4
-     RETURNING ${favoriteColumns}`,
-    [nickname || null, notes || null, id, tenantId]
-  );
-  return result.rows[0] ?? null;
+) {
+  const favorite = await FavoriteModel.findOne({
+    where: {
+      id,
+      tenant_id: tenantId,
+    },
+  });
+
+  if (!favorite) {
+    return null;
+  }
+
+  await favorite.update({
+    nickname: nickname || null,
+    notes: notes || null,
+  });
+
+  return favorite.get({ plain: true });
 }
+
+// PATCH
 export async function patchFavorite(
   id: number,
   tenantId: string,
@@ -99,45 +128,54 @@ export async function patchFavorite(
     nickname?: string;
     notes?: string;
   }
-): Promise<Favorite | null> {
-  const fields: string[] = [];
-  const values: Array<string | number | null> = [];
+) {
+  const favorite = await FavoriteModel.findOne({
+    where: {
+      id,
+      tenant_id: tenantId,
+    },
+  });
+
+  if (!favorite) {
+    return null;
+  }
+
+  const changes: {
+    city?: string;
+    nickname?: string | null;
+    notes?: string | null;
+  } = {};
+
   if (updates.city !== undefined) {
-    values.push(updates.city);
-    fields.push(`city = $${values.length}`);
+    changes.city = updates.city;
   }
+
   if (updates.nickname !== undefined) {
-    values.push(updates.nickname || null);
-    fields.push(`nickname = $${values.length}`);
+    changes.nickname = updates.nickname || null;
   }
+
   if (updates.notes !== undefined) {
-    values.push(updates.notes || null);
-    fields.push(`notes = $${values.length}`);
+    changes.notes = updates.notes || null;
   }
-  values.push(id);
-  const idIndex = values.length;
-  values.push(tenantId);
-  const tenantIndex = values.length;
-  const result = await pool.query(
-    `UPDATE favorites
-     SET ${fields.join(", ")}
-     WHERE id = $${idIndex}
-     AND tenant_id = $${tenantIndex}
-     RETURNING ${favoriteColumns}`,
-    values
-  );
-  return result.rows[0] ?? null;
+
+  if (Object.keys(changes).length > 0) {
+    await favorite.update(changes);
+  }
+
+  return favorite.get({ plain: true });
 }
+
+// DELETE
 export async function deleteFavorite(
   id: number,
   tenantId: string
 ): Promise<number | null> {
-  const result = await pool.query(
-    `DELETE FROM favorites
-     WHERE id = $1
-     AND tenant_id = $2
-     RETURNING id`,
-    [id, tenantId]
-  );
-  return result.rows[0]?.id ?? null;
+  const deletedCount = await FavoriteModel.destroy({
+    where: {
+      id,
+      tenant_id: tenantId,
+    },
+  });
+
+  return deletedCount > 0 ? id : null;
 }

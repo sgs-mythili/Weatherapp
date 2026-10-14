@@ -57,8 +57,11 @@ export const getFavoritesRoute: Hapi.ServerRoute = {
       query: Joi.object({
         page: Joi.number().integer().min(1).default(1),
 
-        limit: Joi.number().integer().min(1).max(100).default(5),
-
+        limit: Joi.alternatives()
+        .try(
+        Joi.number().integer().valid(5, 10),Joi.string().valid("all")
+        )
+        .default(5),
         search: Joi.string().trim().allow("").optional(),
       }),
     },

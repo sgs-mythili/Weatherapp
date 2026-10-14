@@ -20,7 +20,8 @@ function App() {
   const [favoriteError, setFavoriteError] = useState("");
   const [favoritePage, setFavoritePage] = useState(1);
   const [favoriteSearch, setFavoriteSearch] = useState("");
-  const favoriteLimit = 5;
+  const [favoriteLimit, setFavoriteLimit] = useState<5 | 10 | "all">(5);
+
   const {data: weather, isLoading, error, refetch,} = useQuery({
   queryKey: weatherKeys.city(searchCity),
   queryFn: () => getWeather(searchCity),
@@ -237,6 +238,12 @@ const handleFormSubmit = (data: FavoriteFormData) => {
         totalCount={favoritesData?.pagination.totalCount ?? 0}
         onPageChange={setFavoritePage}
         isLoading={favoritesLoading}
+        limit={favoriteLimit}
+        onLimitChange={(value:any) => {
+           setFavoriteLimit(value);
+           setFavoritePage(1);
+        }}
+
       />
 
       {formMode && (

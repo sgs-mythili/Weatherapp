@@ -17,6 +17,9 @@ interface FavoriteCitiesProps {
   totalCount: number;
   onPageChange: (page: number) => void;
   isLoading: boolean;
+  limit: 5 | 10 | "all";
+  onLimitChange: (limit: 5 | 10 | "all") => void;
+
 }
 
 function FavoriteCities({
@@ -32,6 +35,8 @@ function FavoriteCities({
   totalCount,
   onPageChange,
   isLoading,
+  limit,
+  onLimitChange,
 }: FavoriteCitiesProps) {
   const columns: Array<ColumnDef<typeof features, FavoriteCity>> = [
     {
@@ -147,6 +152,35 @@ function FavoriteCities({
       </div>
 
       <div className="favorite-pagination">
+        <div className="favorite-limit">
+          <label htmlFor="favorite-limit-select">
+            Show
+          </label>
+
+          <select
+            id="favorite-limit-select"
+            value={limit}
+            onChange={(event) => {
+              const value = event.target.value;
+
+              if (value === "all") {
+                onLimitChange("all");
+              } else if (value === "10") {
+                onLimitChange(10);
+              } else {
+                onLimitChange(5);
+              }
+            }}
+            className="favorite-limit-select"
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="all">All</option>
+          </select>
+
+          <span>entries</span>
+        </div>
+
         <button
           type="button"
           onClick={() => onPageChange(page - 1)}
@@ -162,7 +196,9 @@ function FavoriteCities({
             type="button"
             onClick={() => onPageChange(pageNumber)}
             className={
-              pageNumber === page ? "page-button active" : "page-button"
+              pageNumber === page
+                ? "page-button active"
+                : "page-button"
             }
           >
             {pageNumber}
@@ -178,7 +214,9 @@ function FavoriteCities({
           Next
         </button>
 
-        <span className="page-count">{totalCount} cities</span>
+        <span className="page-count">
+          {totalCount} cities
+        </span>
       </div>
     </div>
   );

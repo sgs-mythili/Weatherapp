@@ -1,11 +1,12 @@
-import { Pool } from "pg";
-
+import { Sequelize } from "sequelize";
 import { config } from "../config/env";
 
-export const pool = new Pool({
+export const sequelize = new Sequelize({
+  dialect: "postgres",
   host: config.dbHost,
   port: config.dbPort,
   database: config.dbName,
-  user: config.dbUser,
+  username: config.dbUser,
   password: config.dbPassword,
+  logging: false,
 });
