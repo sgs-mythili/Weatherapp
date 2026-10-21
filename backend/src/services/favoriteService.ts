@@ -1,5 +1,4 @@
-import { Op, type WhereOptions } from "sequelize";
-import FavoriteModel from "../models/favoriteModel";
+import * as favoritesRepository from "../repositories/favoritesRepository";
 
 // CREATE
 export async function createFavorite(
@@ -9,15 +8,13 @@ export async function createFavorite(
   nickname?: string,
   notes?: string
 ) {
-  const favorite = await FavoriteModel.create({
+  return favoritesRepository.createFavoriteRecord({
     city,
     temperature,
     tenant_id: tenantId,
     nickname: nickname || null,
     notes: notes || null,
   });
-
-  return favorite.get({ plain: true });
 }
 
 // GET WITH PAGINATION AND SEARCH
@@ -29,64 +26,24 @@ export async function getFavorites(
     search,
   }: {
     page: number;
-    limit: number| "all";
+    limit: number | "all";
     search?: string;
   }
 ) {
-  const keyword = search?.trim();
+  const { count, rows } =
+    await favoritesRepository.findFavorites(
+      tenantId,
+      page,
+      limit,
+      search
+    );
 
-  const pattern = keyword ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%` : "";
-
-const where: WhereOptions = keyword
-  ? {
-      [Op.and]: [
-        { tenant_id: tenantId },
-        {
-          [Op.or]: [
-            {
-              city: {
-                [Op.iLike]: pattern,
-              },
-            },
-            {
-              nickname: {
-                [Op.iLike]: pattern,
-              },
-            },
-          ],
-        },
-      ],
-    }
-  : {
-      tenant_id: tenantId,
-    };
-
-  
   const isAll = limit === "all";
 
-  const queryOptions = {
-    where,
-    order: [
-      ["created_at", "DESC"],
-      ["id", "DESC"],
-    ] as [string, "DESC"][],
-    ...(!isAll
-      ? {
-          limit,
-          offset: (page - 1) * limit,
-        }
-      : {}),
-  };
-
-   const { count, rows } = await FavoriteModel.findAndCountAll(queryOptions);
-
-
   return {
-    data: rows.map((favorite) =>
-      favorite.get({ plain: true })
-    ),
+    data: rows,
     totalCount: count,
-    totalPages: isAll ? 1 : Math.ceil(count / (typeof limit === "number" ? limit : 5)),
+    totalPages: isAll? 1: Math.ceil(count / limit),
     page,
     limit,
   };
@@ -99,23 +56,14 @@ export async function updateFavorite(
   nickname?: string,
   notes?: string
 ) {
-  const favorite = await FavoriteModel.findOne({
-    where: {
-      id,
-      tenant_id: tenantId,
-    },
-  });
-
-  if (!favorite) {
-    return null;
-  }
-
-  await favorite.update({
-    nickname: nickname || null,
-    notes: notes || null,
-  });
-
-  return favorite.get({ plain: true });
+  return favoritesRepository.updateFavoriteRecord(
+    id,
+    tenantId,
+    {
+      nickname: nickname || null,
+      notes: notes || null,
+    }
+  );
 }
 
 // PATCH
@@ -128,22 +76,7 @@ export async function patchFavorite(
     notes?: string;
   }
 ) {
-  const favorite = await FavoriteModel.findOne({
-    where: {
-      id,
-      tenant_id: tenantId,
-    },
-  });
-
-  if (!favorite) {
-    return null;
-  }
-
-  const changes: {
-    city?: string;
-    nickname?: string | null;
-    notes?: string | null;
-  } = {};
+  const changes: favoritesRepository.FavoriteChanges = {};
 
   if (updates.city !== undefined) {
     changes.city = updates.city;
@@ -157,11 +90,11 @@ export async function patchFavorite(
     changes.notes = updates.notes || null;
   }
 
-  if (Object.keys(changes).length > 0) {
-    await favorite.update(changes);
-  }
-
-  return favorite.get({ plain: true });
+  return favoritesRepository.updateFavoriteRecord(
+    id,
+    tenantId,
+    changes
+  );
 }
 
 // DELETE
@@ -169,12 +102,11 @@ export async function deleteFavorite(
   id: number,
   tenantId: string
 ): Promise<number | null> {
-  const deletedCount = await FavoriteModel.destroy({
-    where: {
+  const deletedCount =
+    await favoritesRepository.deleteFavoriteRecord(
       id,
-      tenant_id: tenantId,
-    },
-  });
+      tenantId
+    );
 
   return deletedCount > 0 ? id : null;
 }

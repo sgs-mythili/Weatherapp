@@ -1,5 +1,4 @@
 import type { ServerRoute } from "@hapi/hapi";
-
 import {
   createFavoritePayloadSchema,
   getFavoritesQuerySchema,
@@ -16,6 +15,8 @@ import {
   deleteFavoriteHandler,
 } from "../handlers/favoriteHandlers";
 
+import { inputValidationJoiFailAction,} from "../utils/joiFailAction";
+
 export const favoritesRoutes: ServerRoute[] = [
   {
     method: "POST",
@@ -23,6 +24,10 @@ export const favoritesRoutes: ServerRoute[] = [
     options: {
       validate: {
         payload: createFavoritePayloadSchema,
+        options: {
+          abortEarly: false,
+        },
+        failAction: inputValidationJoiFailAction,
       },
     },
     handler: createFavoriteHandler,
@@ -34,6 +39,10 @@ export const favoritesRoutes: ServerRoute[] = [
     options: {
       validate: {
         query: getFavoritesQuerySchema,
+        options: {
+          abortEarly: false,
+        },
+        failAction: inputValidationJoiFailAction,
       },
     },
     handler: getFavoritesHandler,
@@ -46,6 +55,10 @@ export const favoritesRoutes: ServerRoute[] = [
       validate: {
         params: favoriteIdParamsSchema,
         payload: updateFavoritePayloadSchema,
+        options: {
+          abortEarly: false,
+        },
+        failAction: inputValidationJoiFailAction,
       },
     },
     handler: updateFavoriteHandler,
@@ -58,6 +71,10 @@ export const favoritesRoutes: ServerRoute[] = [
       validate: {
         params: favoriteIdParamsSchema,
         payload: patchFavoritePayloadSchema,
+        options: {
+          abortEarly: false,
+        },
+        failAction: inputValidationJoiFailAction,
       },
     },
     handler: patchFavoriteHandler,
@@ -69,6 +86,10 @@ export const favoritesRoutes: ServerRoute[] = [
     options: {
       validate: {
         params: favoriteIdParamsSchema,
+        options: {
+          abortEarly: false,
+        },
+        failAction: inputValidationJoiFailAction,
       },
     },
     handler: deleteFavoriteHandler,
