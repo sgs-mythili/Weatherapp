@@ -78,8 +78,7 @@ const where: WhereOptions = keyword
       : {}),
   };
 
-   const { count, rows } =
-    await FavoriteModel.findAndCountAll(queryOptions);
+   const { count, rows } = await FavoriteModel.findAndCountAll(queryOptions);
 
 
   return {
