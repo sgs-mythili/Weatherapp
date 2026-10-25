@@ -264,4 +264,205 @@
   @apply outline-none border-blue-500;
 }
 
+.page-title {
+  @apply text-2xl font-bold mb-6;
+}
+
+.dashboard-page {
+  @apply max-w-5xl mx-auto;
+}
+
+.dashboard-actions {
+  @apply text-center mt-6;
+}
+
+.favorites-page {
+  @apply max-w-6xl mx-auto;
+}
+
+.city-details-page {
+  @apply max-w-6xl mx-auto;
+}
+
+.city-details-header {
+  @apply mb-8;
+}
+
+.navigation-link {
+  @apply inline-block text-blue-600
+    font-medium mb-4 hover:underline;
+}
+
+.forecast-grid {
+  @apply grid grid-cols-1 gap-4
+    sm:grid-cols-2 lg:grid-cols-5;
+}
+
+.forecast-card {
+  @apply bg-white border border-gray-200
+    rounded-xl p-5 shadow-md;
+}
+
+.forecast-date {
+  @apply text-lg font-semibold mb-4;
+}
+
+.forecast-temperature {
+  @apply space-y-2 text-gray-800 mb-4;
+}
+
+.forecast-condition {
+  @apply text-sm text-gray-600 mb-2;
+}
+
+.forecast-rain {
+  @apply text-sm text-blue-600;
+}
+
+.success-message {
+  @apply text-center text-green-600 mb-4;
+}
+
+/* Main page layout */
+
+.weather-container {
+  @apply min-h-screen bg-gray-100 p-0;
+}
+
+.app-header {
+  @apply bg-white border-b border-gray-200
+    px-6 py-5 flex flex-col items-center gap-4;
+}
+
+.weather-title {
+  @apply text-3xl font-bold text-center m-0;
+}
+
+.app-navigation {
+  @apply flex justify-center items-center gap-8;
+}
+
+.app-navigation a {
+  @apply text-gray-600 font-medium
+    no-underline px-3 py-2 rounded-lg;
+}
+
+.app-navigation a:hover {
+  @apply bg-gray-100 text-blue-600;
+}
+
+.app-navigation a.active {
+  @apply bg-blue-100 text-blue-700;
+}
+
+.app-main {
+  @apply max-w-6xl mx-auto px-4 py-8;
+}
+
+/* Page headings */
+
+.page-title {
+  @apply text-2xl font-bold text-center mb-6;
+}
+
+/* Dashboard */
+
+.dashboard-page {
+  @apply max-w-4xl mx-auto;
+}
+
+.dashboard-actions {
+  @apply text-center mt-6;
+}
+
+/* Favorites */
+
+.favorites-page {
+  @apply max-w-5xl mx-auto;
+}
+
+.favorites-page .favorite-cities {
+  @apply max-w-none w-full;
+}
+
+.favorites-page .favorite-form {
+  @apply max-w-2xl;
+}
+
+/* City details */
+
+.city-details-page {
+  @apply max-w-5xl mx-auto;
+}
+
+.city-details-header {
+  @apply flex flex-col items-center gap-4 mb-8;
+}
+
+.city-details-header .unit-button {
+  @apply mb-0;
+}
+
+.navigation-link {
+  @apply text-blue-600 font-medium
+    no-underline hover:underline;
+}
+
+.city-details-page .search-container {
+  @apply w-full max-w-2xl mx-auto mb-8;
+}
+
+/* Five-day forecast */
+
+.forecast-grid {
+  @apply grid grid-cols-1 gap-5
+    sm:grid-cols-2 lg:grid-cols-5;
+}
+
+.forecast-card {
+  @apply bg-white border border-gray-200
+    rounded-xl p-5 shadow-md;
+}
+
+.forecast-date {
+  @apply text-lg font-semibold mb-4;
+}
+
+.forecast-temperature {
+  @apply space-y-2 mb-4;
+}
+
+.forecast-condition {
+  @apply text-sm text-gray-600 mb-2;
+}
+
+.forecast-rain {
+  @apply text-sm text-blue-600;
+}
+
+/* Forecast error */
+
+.forecast-error {
+  @apply max-w-lg mx-auto bg-white
+    rounded-xl shadow-md p-8
+    flex flex-col items-center gap-4 text-center;
+}
+
+.forecast-error h3 {
+  @apply text-xl font-semibold;
+}
+
+.forecast-error .error-message {
+  @apply mb-0;
+}
+
+.forecast-error .search-button {
+  @apply mt-2;
+}
+
+/* Messages */
+
+.success-message {
+  @apply text-center text-green-600 mb-4;
+}
 

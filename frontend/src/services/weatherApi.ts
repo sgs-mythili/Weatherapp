@@ -1,4 +1,4 @@
-import type { WeatherData } from "../types/weather";
+import type { WeatherData,  CityForecast } from "../types/weather";
 import type { FavoriteCityResponse } from "../types/city";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -173,6 +173,30 @@ export async function patchFavorite(
   }
 
   return data;
+}
+
+export async function getFiveDayForecast(
+  city: string
+): Promise<CityForecast> {
+  const response = await fetch(
+    `${API_URL}/weather/forecast?city=${encodeURIComponent(city)}`,
+    {
+      method: "GET",
+      headers: {
+        "x-tenant-id": TENANT_ID,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "Unable to fetch five-day forecast"
+    );
+  }
+
+  return data.data as CityForecast;
 }
 
 

@@ -1,12 +1,9 @@
 import Hapi from "@hapi/hapi";
-import Joi from "joi";
-import Boom from "@hapi/boom";
 import { validateTenant } from "./utils/validateTenant";
 import { getWeather } from "./services/weatherService";
-import { weatherRoute } from "./routes/weather";
+import { weatherRoute,forecastRoutes } from "./routes/weather";
 import { favoritesRoutes } from "./routes/favorites";
 import { config } from "./config/env";
-const favorites: string[] = [];
 import {sequelize} from "./database/db";
 
 const server = Hapi.server({  
@@ -17,12 +14,15 @@ const server = Hapi.server({
     cors: {
       origin: [config.frontendUrl],
       additionalHeaders: ["x-tenant-id"],
+      additionalExposedHeaders: ["x-tenant-id"],
+      credentials: false,
     },
   },
 });
 
 server.route(weatherRoute);
 server.route(favoritesRoutes);
+server.route(forecastRoutes);
 
 const start = async () => {
   try {

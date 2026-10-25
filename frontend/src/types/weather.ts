@@ -6,3 +6,16 @@ export interface WeatherData {
   windSpeed: number
   feelsLike: number
 }
+
+export interface ForecastDay {
+  date: string;
+  temperatureMax: number;
+  temperatureMin: number;
+  weatherCode: number;
+  precipitationProbability: number | null;
+}
+
+export interface CityForecast {
+  city: string;
+  days: ForecastDay[];
+}

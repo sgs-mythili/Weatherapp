@@ -1,33 +1,49 @@
-import Hapi from "@hapi/hapi";
-import Joi from "joi";
+import type { ServerRoute } from "@hapi/hapi";
 
-import { validateTenant } from "../utils/validateTenant";
-import { getWeather } from "../services/weatherService";
+import {
+  weatherQuerySchema,
+  forecastQuerySchema,
+} from "../schemas/weatherSchemas";
 
-export const weatherRoute: Hapi.ServerRoute = {
+import {
+  getWeatherHandler,
+  getForecastHandler,
+} from "../handlers/weatherHandler";
+
+import { inputValidationJoiFailAction } from "../utils/joiFailAction";
+
+// GET /weather
+export const weatherRoute: ServerRoute = {
   method: "GET",
   path: "/weather",
 
   options: {
     validate: {
-      query: Joi.object({
-        city: Joi.string().trim().min(1).required(),
-      }),
+      query: weatherQuerySchema,
+      options: {
+        abortEarly: false,
+      },
+      failAction: inputValidationJoiFailAction,
     },
   },
 
-  handler: async (request, h) => {
-    validateTenant(request);
+  handler: getWeatherHandler,
+};
 
-    const { city } = request.query as {
-      city: string;
-    };
+// GET /weather/forecast
+export const forecastRoutes: ServerRoute = {
+  method: "GET",
+  path: "/weather/forecast",
 
-    const weather = await getWeather(city);
-
-    return h.response({
-      status: "success",
-      data: weather,
-    });
+  options: {
+    validate: {
+      query: forecastQuerySchema,
+      options: {
+        abortEarly: false,
+      },
+      failAction: inputValidationJoiFailAction,
+    },
   },
+
+  handler: getForecastHandler,
 };

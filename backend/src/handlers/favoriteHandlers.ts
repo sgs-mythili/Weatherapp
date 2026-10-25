@@ -1,5 +1,4 @@
 import type { Request, ResponseToolkit } from "@hapi/hapi";
-import Boom from "@hapi/boom";
 
 import { validateTenant } from "../utils/validateTenant";
 
@@ -11,6 +10,15 @@ import {
   deleteFavorite,
 } from "../services/favoriteService";
 
+import type {
+  CreateFavoritePayload,
+  GetFavoritesQuery,
+  UpdateFavoritePayload,
+  PatchFavoritePayload,
+  FavoriteIdParams,
+} from "../types/favorite";
+import { NotFoundError } from "../errors";
+
 // POST /favorites
 export async function createFavoriteHandler(
   request: Request,
@@ -19,19 +27,14 @@ export async function createFavoriteHandler(
   const tenantId = validateTenant(request);
 
   const { city, temperature, nickname, notes } =
-    request.payload as {
-      city: string;
-      temperature: number;
-      nickname?: string;
-      notes?: string;
-    };
+    request.payload as CreateFavoritePayload;
 
   const favorite = await createFavorite(
     city,
     temperature,
     tenantId,
-    nickname,
-    notes
+    nickname??undefined,
+    notes??undefined
   );
 
   return h
@@ -50,11 +53,7 @@ export async function getFavoritesHandler(
 ) {
   const tenantId = validateTenant(request);
 
-  const { page, limit, search } = request.query as {
-    page: number;
-    limit: number | "all";
-    search?: string;
-  };
+  const { page=1, limit=5, search } = request.query as GetFavoritesQuery;
 
   const favorites = await getFavorites(tenantId, {
     page,
@@ -83,20 +82,17 @@ export async function updateFavoriteHandler(
 
   const { id } = request.params as { id: number };
 
-  const { nickname, notes } = request.payload as {
-    nickname?: string;
-    notes?: string;
-  };
+  const { nickname, notes } = request.payload as UpdateFavoritePayload;
 
   const favorite = await updateFavorite(
     id,
     tenantId,
-    nickname,
-    notes
+    nickname??undefined,
+    notes??undefined
   );
 
   if (!favorite) {
-    throw Boom.notFound("Favorite city not found");
+    throw NotFoundError("CITY_NOT_FOUND", "Favorite city not found");
   }
 
   return h.response({
@@ -115,20 +111,16 @@ export async function patchFavoriteHandler(
 
   const { id } = request.params as { id: number };
 
-  const { city, nickname, notes } = request.payload as {
-    city?: string;
-    nickname?: string;
-    notes?: string;
-  };
+  const { city, nickname, notes } = request.payload as PatchFavoritePayload;
 
   const favorite = await patchFavorite(id, tenantId, {
     city,
-    nickname,
-    notes,
+    nickname: nickname??undefined,
+    notes: notes??undefined,
   });
 
   if (!favorite) {
-    throw Boom.notFound("Favorite city not found");
+    throw NotFoundError("CITY_NOT_FOUND", "Favorite city not found");
   }
 
   return h.response({
@@ -145,12 +137,13 @@ export async function deleteFavoriteHandler(
 ) {
   const tenantId = validateTenant(request);
 
-  const { id } = request.params as { id: number };
+  const idParam: FavoriteIdParams["id"] = String(request.params.id);
+  const id = Number(idParam); 
 
   const deletedId = await deleteFavorite(id, tenantId);
 
   if (!deletedId) {
-    throw Boom.notFound("Favorite city not found");
+    throw NotFoundError("CITY_NOT_FOUND", "Favorite city not found");
   }
 
   return h.response({

@@ -118,3 +118,17 @@ export async function deleteFavoriteRecord(
     },
   });
 }
+
+export async function findByCity(
+  tenantId: string,
+  city: string
+) {
+  return FavoriteModel.findOne({
+    where: {
+      tenant_id: tenantId,
+      city: {
+        [Op.iLike]: city.trim()
+      }
+    },
+  });
+}
