@@ -38,7 +38,10 @@ export const favoritesListResponseSchema = z.object({
     totalCount: z.number(),
     totalPages: z.number(),
     page: z.number(),
-    limit: z.number(),
+    limit: z.union([
+      z.number(),
+      z.literal("all"),
+    ]),
   }),
 });
 
