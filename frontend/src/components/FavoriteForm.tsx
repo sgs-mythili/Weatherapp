@@ -24,7 +24,10 @@ function FavoriteForm({mode, defaultValues, onSubmit, onCancel, isSubmitting,}: 
       <h2>{mode === "add" ? "Add Favorite City" : "Edit Favorite City"}</h2>
       <label>
         City
-        <input {...register("city")} />
+        <input {...register("city")} 
+        readOnly={mode !== "add"} 
+        className={mode !== "add" ? "input-disabled" : ""} 
+      />
       </label>
       {errors.city && (
         <p className="error-message">{errors.city.message}</p>
