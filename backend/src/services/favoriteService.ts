@@ -9,21 +9,17 @@ export async function createFavorite(
   notes?: string
 ) {
   const normalizedCity = city.trim();
-  console.log("Create Favorite called")
-  console.log("tenantId:", tenantId);
-  console.log("normalizedCity:", normalizedCity);
+
   // Step 1: Check if city already exists
-  const existingFavorite =
-    await favoritesRepository.findByCity(
+  const existingFavorite = await favoritesRepository.findByCity(
       tenantId,
       normalizedCity
     );
   
-  console.log("existingFavorite:", existingFavorite);
+
 
   // Step 2: Throw error if duplicate
   if (existingFavorite) {
-    console.log("City already exists in favorites");
     throw ConflictError(
       "CITY_ALREADY_EXISTS",
       "City already exists in favorites"

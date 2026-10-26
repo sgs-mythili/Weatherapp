@@ -11,10 +11,7 @@ import WeatherCard from "../components/WeatherCard";
 
 import type { WeatherData } from "../types/weather";
 
-import {
-  getWeather,
-  addFavorite as addFavoriteApi,
-} from "../services/weatherApi";
+import {getWeather,addFavorite as addFavoriteApi,} from "../services/weatherApi";
 
 import { weatherKeys } from "../queries/weatherkeys";
 import { useWeatherStore } from "../store/weatherStore";

@@ -13,9 +13,7 @@ import { convertTemperature } from "../utils/temperature";
 import type { CityForecast } from "../types/weather";
 
 function CityDetailsPage() {
-  const { cityName } = useParams<{
-    cityName: string;
-  }>();
+  const { cityName } = useParams<{cityName: string}>();
 
   const navigate = useNavigate();
 
@@ -168,9 +166,9 @@ function CityDetailsPage() {
                 </p>
               </div>
 
-              <p className="forecast-condition">
+              {/* <p className="forecast-condition">
                 Weather code: {day.weatherCode}
-              </p>
+              </p> */}
 
               <p className="forecast-rain">
                 Rain chance:{" "}

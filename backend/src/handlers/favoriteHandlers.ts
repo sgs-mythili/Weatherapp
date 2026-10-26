@@ -20,14 +20,10 @@ import type {
 import { NotFoundError } from "../errors";
 
 // POST /favorites
-export async function createFavoriteHandler(
-  request: Request,
-  h: ResponseToolkit
-) {
+export async function createFavoriteHandler(request: Request,h: ResponseToolkit) {
   const tenantId = validateTenant(request);
 
-  const { city, temperature, nickname, notes } =
-    request.payload as CreateFavoritePayload;
+  const { city, temperature, nickname, notes } = request.payload as CreateFavoritePayload;
 
   const favorite = await createFavorite(
     city,

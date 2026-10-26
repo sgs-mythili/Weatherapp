@@ -1,18 +1,11 @@
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import {useMutation,useQuery,useQueryClient,} from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 import FavoriteCities from "../components/FavoriteCities";
 import FavoriteForm from "../components/FavoriteForm";
 
-import type {
-  FavoriteCity,
-  FavoriteCityResponse,
-} from "../types/city";
+import type {FavoriteCity, FavoriteCityResponse,} from "../types/city";
 
 import type { FavoriteFormData } from "../schemas/favoriteSchema";
 
@@ -34,52 +27,27 @@ export default function FavoritesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Pagination and filtering
   const [favoritePage, setFavoritePage] = useState(1);
   const [favoriteLimit, setFavoriteLimit] = useState< 5|10| "all">(5);
   const [favoriteSearch, setFavoriteSearch] = useState("");
-
-  // Edit form
-  const [formMode, setFormMode] = useState<
-    "add" | "edit" | null
-  >(null);
-
-  const [editingId, setEditingId] = useState<string | null>(
-    null
-  );
-
+  const [formMode, setFormMode] = useState<"add" | "edit" | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formDefaults, setFormDefaults] =
     useState<FavoriteFormData>({
       city: "",
       nickname: "",
       notes: "",
     });
-
   const [favoriteError, setFavoriteError] = useState("");
 
-  // Temperature unit from Zustand
   const unit = useWeatherStore(
     (state) => state.unit
   );
 
   // GET /favorites
-  const {
-    data: favoritesData,
-    isLoading: favoritesLoading,
-    error: favoritesQueryError,
-  } = useQuery({
-    queryKey: [
-      "favorites",
-      favoritePage,
-      favoriteLimit,
-      favoriteSearch,
-    ],
-    queryFn: () =>
-      getFavorites(
-        favoritePage,
-        favoriteLimit,
-        favoriteSearch
-      ),
+  const {data: favoritesData,isLoading: favoritesLoading,error: favoritesQueryError,} = useQuery({
+    queryKey: ["favorites",favoritePage,favoriteLimit,favoriteSearch,],
+    queryFn: () => getFavorites(favoritePage,favoriteLimit,favoriteSearch),
   });
 
   // Convert API response to FavoriteCity[]
@@ -176,17 +144,11 @@ export default function FavoritesPage() {
       updates.city = data.city;
     }
 
-    if (
-      (data.nickname ?? "") !==
-      (formDefaults.nickname ?? "")
-    ) {
+    if ((data.nickname ?? "") !== (formDefaults.nickname ?? "")) {
       updates.nickname = data.nickname ?? "";
     }
 
-    if (
-      (data.notes ?? "") !==
-      (formDefaults.notes ?? "")
-    ) {
+    if ((data.notes ?? "") !==(formDefaults.notes ?? "")) {
       updates.notes = data.notes ?? "";
     }
 
