@@ -3,8 +3,8 @@ export function convertTemperature(
   unit: "C" | "F"
 ) {
   if (unit === "C") {
-    return temperature;
+    return Number(temperature.toFixed(2));
   }
 
-  return (temperature * 9) / 5 + 32;
+  return Number(((temperature * 9) / 5 + 32).toFixed(2));
 }
