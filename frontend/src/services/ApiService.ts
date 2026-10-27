@@ -52,7 +52,7 @@ async function request<T>(
 
   if (!parsed.success) {
     throw new Error(
-      `Invalid API response for ${path}: ${z.prettifyError(parsed.error)}`
+      `Invalid API response for ${path}: ${JSON.stringify(parsed.error.message)}`
     );
   }
 
