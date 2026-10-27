@@ -1,9 +1,4 @@
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
 import { Link } from "react-router";
 
 import SearchBar from "../components/SearchComponent";
@@ -11,24 +6,17 @@ import WeatherCard from "../components/WeatherCard";
 
 import type { WeatherData } from "../types/weather";
 
-import {getWeather,addFavorite as addFavoriteApi,} from "../services/weatherApi";
-
-import { weatherKeys } from "../queries/weatherkeys";
 import { useWeatherStore } from "../store/weatherStore";
+import { useAddFavoriteMutation } from "../queries/favorites/useAddFavoriteMutation";
+import { useWeather } from "../queries/weather/useWeather";
 
 export default function DashboardPage() {
   const [city, setCity] = useState("");
   const [searchCity, setSearchCity] = useState("");
   const [favoriteError, setFavoriteError] = useState("");
 
-  const queryClient = useQueryClient();
-
   const unit = useWeatherStore(
     (state) => state.unit
-  );
-
-  const toggleUnit = useWeatherStore(
-    (state) => state.actions.toggleUnit
   );
 
   // Fetch current weather only after Search is clicked
@@ -36,35 +24,10 @@ export default function DashboardPage() {
     data: weather,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: weatherKeys.city(searchCity),
-    queryFn: () => getWeather(searchCity),
-    enabled: Boolean(searchCity.trim()),
-    refetchOnWindowFocus: true,
-  });
+  } = useWeather(searchCity);
 
   // Add city to favorites
-  const addFavoriteMutation = useMutation({
-    mutationFn: (weatherData: WeatherData) =>
-      addFavoriteApi(
-        weatherData.city,
-        weatherData.temperature,
-        "",
-        ""
-      ),
-
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["favorites"],
-      });
-
-      setFavoriteError("");
-    },
-
-    onError: (error: Error) => {
-      setFavoriteError(error.message);
-    },
-  });
+   const addFavoriteMutation = useAddFavoriteMutation()
 
   const handleSearch = () => {
     const trimmedCity = city.trim();
@@ -85,14 +48,6 @@ export default function DashboardPage() {
   return (
     <section className="dashboard-page">
       <h2 className="page-title">Dashboard</h2>
-
-      <button
-        type="button"
-        onClick={toggleUnit}
-        className="unit-button"
-      >
-        Switch to °{unit === "C" ? "F" : "C"}
-      </button>
 
       <SearchBar
         city={city}
