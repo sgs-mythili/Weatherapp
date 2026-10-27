@@ -1,14 +1,16 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Link,
   useNavigate,
   useParams,
 } from "react-router";
 
+import { getFiveDayForecast } from "../services/weatherApi";
 import { useWeatherStore } from "../store/weatherStore";
 import { convertTemperature } from "../utils/temperature";
 
-import { useFiveDayForecast } from "../queries/weather/useFiveDayForecast";
+import type { CityForecast } from "../types/weather";
 
 function CityDetailsPage() {
   const { cityName } = useParams<{cityName: string}>();
@@ -21,9 +23,9 @@ function CityDetailsPage() {
     (state) => state.unit
   );
 
-  // const toggleUnit = useWeatherStore(
-  //   (state) => state.actions.toggleUnit
-  // );
+  const toggleUnit = useWeatherStore(
+    (state) => state.actions.toggleUnit
+  );
 
   const {
     data: forecast,
@@ -31,7 +33,12 @@ function CityDetailsPage() {
     isError,
     error,
     refetch,
-  } = useFiveDayForecast(cityName);
+  } = useQuery<CityForecast>({
+    queryKey: ["forecast", cityName],
+    queryFn: () => getFiveDayForecast(cityName!),
+    enabled: Boolean(cityName?.trim()),
+    retry: 1,
+  });
 
   const handleSearch = (event: React.SubmitEvent) => {
     event.preventDefault();
@@ -60,13 +67,13 @@ function CityDetailsPage() {
           {cityName} - 5 Days Forecast
         </h2>
 
-        {/* <button
+        <button
           type="button"
           onClick={toggleUnit}
           className="unit-button"
         >
           Switch to °{unit === "C" ? "F" : "C"}
-        </button> */}
+        </button>
       </div>
 
       <form
