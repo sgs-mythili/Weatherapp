@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {useMutation,useQueryClient,} from "@tanstack/react-query";
+import {useMutation,useQuery,useQueryClient,} from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 
 import FavoriteCities from "../components/FavoriteCities";
@@ -10,13 +10,12 @@ import type {FavoriteCity, FavoriteCityResponse,} from "../types/city";
 import type { FavoriteFormData } from "../schemas/favoriteSchema";
 
 import {
+  getFavorites,
   patchFavorite as patchFavoriteApi,
   deleteFavorite as deleteFavoriteApi,
 } from "../services/weatherApi";
 
 import { useWeatherStore } from "../store/weatherStore";
-import {useFavorites} from "../queries/favorites/useFavorites";
-import {favoriteKeys} from "../queries/favorites/favoriteKeys";
 
 interface FavoriteUpdates {
   city?: string;
@@ -46,10 +45,9 @@ export default function FavoritesPage() {
   );
 
   // GET /favorites
-  const {data: favoritesData,isLoading: favoritesLoading,error: favoritesQueryError,} = useFavorites({
-    page: favoritePage,
-    limit: favoriteLimit,
-    search: favoriteSearch,
+  const {data: favoritesData,isLoading: favoritesLoading,error: favoritesQueryError,} = useQuery({
+    queryKey: ["favorites",favoritePage,favoriteLimit,favoriteSearch,],
+    queryFn: () => getFavorites(favoritePage,favoriteLimit,favoriteSearch),
   });
 
   // Convert API response to FavoriteCity[]
@@ -76,7 +74,7 @@ export default function FavoritesPage() {
 
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: favoriteKeys.all,
+        queryKey: ["favorites"],
       });
 
       setFormMode(null);
@@ -103,7 +101,7 @@ export default function FavoritesPage() {
       }
 
       await queryClient.invalidateQueries({
-        queryKey: favoriteKeys.all,
+        queryKey: ["favorites"],
       });
 
       setFavoriteError("");
