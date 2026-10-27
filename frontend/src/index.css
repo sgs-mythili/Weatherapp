@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 /* Main */
+@theme {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-border: #e5e7eb;
+  --color-surface: #ffffff;
+  --color-page: #f3f4f6;
+  --color-muted: #6b7280;
+  --color-danger: #ef4444;
+  --color-success: #16a34a;
+}
 
 .weather-container {
   @apply min-h-screen bg-gray-100 p-6;
@@ -365,6 +375,9 @@
   @apply text-2xl font-bold text-center mb-6;
 }
 
+.text-center {
+  @apply text-center;
+}
 /* Dashboard */
 
 .dashboard-page {
