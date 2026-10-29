@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const handleAddFavorite = (weatherData: WeatherData) => {
     setFavoriteError("");
     addFavoriteMutation.mutate(weatherData,{
-      onError: (error: any) => {
+      onError: (error:unknown) => {
         setFavoriteError(
           error instanceof Error
             ? error.message
