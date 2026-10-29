@@ -8,6 +8,7 @@ import FavoriteForm from "../components/FavoriteForm";
 import type {FavoriteCity, FavoriteCityResponse,} from "../types/city";
 
 import type { FavoriteFormData } from "../schemas/favoriteSchema";
+import ConfirmModal from "../components/ConfirmModal";
 
 import {
   patchFavorite as patchFavoriteApi,
@@ -40,6 +41,7 @@ export default function FavoritesPage() {
       notes: "",
     });
   const [favoriteError, setFavoriteError] = useState("");
+  const [favoriteToDelete, setFavoriteToDelete] = useState<FavoriteCity | null>(null);
 
   const unit = useWeatherStore(
     (state) => state.unit
@@ -191,7 +193,12 @@ export default function FavoritesPage() {
       <FavoriteCities
         cities={favoriteCities}
         unit={unit}
-        onDeleteFavorite={(id) => deleteFavoriteMutation.mutate(id)}
+        onDeleteFavorite={(id) => {
+          const selectedCity = favoriteCities.find((city) => city.id === id);
+          if (selectedCity) {
+            setFavoriteToDelete(selectedCity);
+          }
+        }}
         onSelectCity={handleSelectFavorite}
         onEditFavorite={openEditForm}
         search={favoriteSearch}
@@ -224,6 +231,35 @@ export default function FavoritesPage() {
           isSubmitting={updateFavoriteMutation.isPending}
         />
       )}
+
+      <ConfirmModal
+        isOpen={favoriteToDelete !== null}
+        title="Remove favorite?"
+        description={`Are you sure you want to remove ${
+          favoriteToDelete?.name ?? ""
+        } from favorites?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isConfirming={deleteFavoriteMutation.isPending}
+        onClose={() => {
+          if (!deleteFavoriteMutation.isPending) {
+            setFavoriteToDelete(null);
+          }
+        }}
+        onConfirm={async () => {
+          if (!favoriteToDelete) {
+            return;
+          }
+
+          try {
+            await deleteFavoriteMutation.mutateAsync(favoriteToDelete.id);
+
+            setFavoriteToDelete(null);
+          } catch(error) {
+              console.error("Failed to delete favorite:", error);
+          }
+        }}
+      />
     </section>
   );
 }
