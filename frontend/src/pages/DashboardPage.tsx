@@ -42,15 +42,15 @@ export default function DashboardPage() {
 
   const handleAddFavorite = (weatherData: WeatherData) => {
     setFavoriteError("");
-    addFavoriteMutation.mutate(weatherData),{
+    addFavoriteMutation.mutate(weatherData,{
       onError: (error: any) => {
         setFavoriteError(
           error instanceof Error
             ? error.message
             : "Unable to add favorite"
         );
-      }
-    };
+      },
+    });
   };
 
   return (

@@ -8,7 +8,7 @@ import FavoriteForm from "../components/FavoriteForm";
 import type {FavoriteCity, FavoriteCityResponse,} from "../types/city";
 
 import type { FavoriteFormData } from "../schemas/favoriteSchema";
-import ConfirmModal from "./ConfirmModal";
+import ConfirmModal from "../components/ConfirmModal";
 
 import {
   patchFavorite as patchFavoriteApi,
