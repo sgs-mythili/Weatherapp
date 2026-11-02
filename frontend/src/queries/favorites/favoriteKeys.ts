@@ -9,8 +9,8 @@ export const favoriteKeys = {
 
   lists: () => [...favoriteKeys.all, "list"] as const,
 
-  list: (filters: FavoriteFilters) =>
-    [...favoriteKeys.lists(), filters] as const,
+  list: (filters: FavoriteFilters, tenantId: string) =>
+    [...favoriteKeys.lists(), filters, tenantId] as const,
 
   details: () => [...favoriteKeys.all, "detail"] as const,
 

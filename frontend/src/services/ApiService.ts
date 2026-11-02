@@ -6,9 +6,9 @@ import {
   favoritesListResponseSchema,
   favoriteCityResponseSchema,
 } from "./apiSchemas";
+import {useWeatherStore} from "../store/weatherStore";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const TENANT_ID = import.meta.env.VITE_TENANT_ID;
 
 async function request<T>(
   path: string,
@@ -18,7 +18,7 @@ async function request<T>(
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "x-tenant-id": TENANT_ID,
+      "x-tenant-id": useWeatherStore.getState().currentTenant,
       ...(options.body
         ? { "Content-Type": "application/json" }
         : {}),

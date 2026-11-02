@@ -55,8 +55,11 @@ function FavoriteCities({
     {
       id: "temperature",
       header: "Temperature",
-      cell: (info) =>
-        `${convertTemperature(info.row.original.temperature, unit)}°${unit}`,
+      cell: (info) => info.row.original.temperature === null ? "N/A"
+      : `${convertTemperature(
+      info.row.original.temperature,
+      unit
+    )}°${unit}`,
     },
     {
       accessorKey: "nickname",

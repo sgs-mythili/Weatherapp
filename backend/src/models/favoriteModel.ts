@@ -9,7 +9,7 @@ import { sequelize } from "../database/db";
 interface FavoriteAttributes {
   id: number;
   city: string;
-  temperature: number;
+  temperature: number|null;
   nickname: string | null;
   notes: string | null;
   tenant_id: string;
@@ -28,7 +28,7 @@ class FavoriteModel
 {
   declare id: number;
   declare city: string;
-  declare temperature: number;
+  declare temperature: number|null;
   declare nickname: string | null;
   declare notes: string | null;
   declare tenant_id: string;
@@ -51,7 +51,7 @@ FavoriteModel.init(
 
     temperature: {
       type: DataTypes.DECIMAL,
-      allowNull: false,
+      allowNull: true,
     },
 
     nickname: {

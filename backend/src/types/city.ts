@@ -1,7 +1,7 @@
 export interface FavoriteCity {
   id: string;
   name: string;
-  temperature: number;
+  temperature: number|null;
   nickname?: string | null;
   notes?: string | null;
 }
@@ -9,7 +9,7 @@ export interface FavoriteCity {
 export interface FavoriteCityResponse {
   id: number;
   city: string;
-  temperature: string|number;
+  temperature: string|number|null;
   nickname: string | null;
   notes: string | null;
   tenant_id: string;
