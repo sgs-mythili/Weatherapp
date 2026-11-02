@@ -21,7 +21,7 @@ import { NotFoundError } from "../errors";
 
 // POST /favorites
 export async function createFavoriteHandler(request: Request,h: ResponseToolkit) {
-  const tenantId = validateTenant(request);
+  const tenantId = await validateTenant(request);
 
   const { city, temperature, nickname, notes } = request.payload as CreateFavoritePayload;
 
@@ -47,7 +47,7 @@ export async function getFavoritesHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  const tenantId = validateTenant(request);
+  const tenantId = await validateTenant(request);
 
   const { page=1, limit=5, search } = request.query as GetFavoritesQuery;
 
@@ -74,7 +74,7 @@ export async function updateFavoriteHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  const tenantId = validateTenant(request);
+  const tenantId = await validateTenant(request);
 
   const { id } = request.params as { id: number };
 
@@ -103,7 +103,7 @@ export async function patchFavoriteHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  const tenantId = validateTenant(request);
+  const tenantId = await validateTenant(request);
 
   const { id } = request.params as { id: number };
 
@@ -131,7 +131,7 @@ export async function deleteFavoriteHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  const tenantId = validateTenant(request);
+  const tenantId = await validateTenant(request);
 
   const idParam: FavoriteIdParams["id"] = String(request.params.id);
   const id = Number(idParam); 

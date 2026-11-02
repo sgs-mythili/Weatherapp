@@ -42,7 +42,15 @@ export default function DashboardPage() {
 
   const handleAddFavorite = (weatherData: WeatherData) => {
     setFavoriteError("");
-    addFavoriteMutation.mutate(weatherData);
+    addFavoriteMutation.mutate(weatherData,{
+      onError: (error:unknown) => {
+        setFavoriteError(
+          error instanceof Error
+            ? error.message
+            : "Unable to add favorite"
+        );
+      },
+    });
   };
 
   return (
@@ -89,7 +97,7 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {addFavoriteMutation.isSuccess && (
+      {addFavoriteMutation.isSuccess && !favoriteError && (
         <p className="success-message">
           City added to favorites.
         </p>

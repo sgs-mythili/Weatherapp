@@ -14,6 +14,7 @@ interface FavoriteAttributes {
   notes: string | null;
   tenant_id: string;
   created_at: Date;
+  is_deleted?: boolean;
 }
 
 type FavoriteCreationAttributes = Optional<
@@ -32,6 +33,7 @@ class FavoriteModel
   declare notes: string | null;
   declare tenant_id: string;
   declare created_at: Date;
+  declare is_deleted: boolean
 }
 
 FavoriteModel.init(
@@ -72,13 +74,18 @@ FavoriteModel.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    is_deleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     sequelize,
     modelName: "Favorite",
     tableName: "favorites",
     timestamps: false,
-  }
+  },
 );
 
 export default FavoriteModel;

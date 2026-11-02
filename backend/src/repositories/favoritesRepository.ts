@@ -45,7 +45,10 @@ export async function findFavorites(
           },
         ],
       }
-    : { tenant_id: tenantId };
+    : { 
+      tenant_id: tenantId,
+      is_deleted: false,
+    };
 
   const isAll = limit === "all";
 
@@ -83,6 +86,7 @@ export async function findFavoriteById(
     where: {
       id,
       tenant_id: tenantId,
+      is_deleted: false,
     },
   });
 }
@@ -111,12 +115,23 @@ export async function deleteFavoriteRecord(
   id: number,
   tenantId: string
 ) {
-  return FavoriteModel.destroy({
+  const favorite = await FavoriteModel.findOne({
     where: {
       id,
       tenant_id: tenantId,
+      is_deleted: false,
     },
   });
+
+  if (!favorite) {
+    return 0;
+  }
+
+  await favorite.update({
+    is_deleted: true,
+  });
+
+  return 1;
 }
 
 export async function findByCity(
@@ -128,7 +143,8 @@ export async function findByCity(
       tenant_id: tenantId,
       city: {
         [Op.iLike]: city.trim()
-      }
+      },
+      is_deleted: false,
     },
   });
 }
