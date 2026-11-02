@@ -8,7 +8,8 @@
     "start": "npx tsx src/server.ts",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
-    "migrate:status": "sequelize-cli db:migrate:status"
+    "migrate:status": "sequelize-cli db:migrate:status",
+    "seed:dev": "sequelize-cli db:seed:all"
   },
   "keywords": [],
   "author": "",

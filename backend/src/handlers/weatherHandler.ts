@@ -7,7 +7,7 @@ export async function getWeatherHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  validateTenant(request);    
+  await validateTenant(request);    
   
   const { city} = request.query as unknown as WeatherQuery;
 
@@ -23,7 +23,7 @@ export async function getForecastHandler(
   request: Request,
   h: ResponseToolkit
 ) {
-  validateTenant(request);
+   await validateTenant(request);
 
   const { city } =
     request.query as unknown as WeatherQuery;
