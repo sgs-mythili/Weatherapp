@@ -60,7 +60,7 @@ export default function FavoritesPage() {
       (favorite: FavoriteCityResponse) => ({
         id: favorite.id.toString(),
         name: favorite.city,
-        temperature: Number(favorite.temperature),
+        temperature:favorite.temperature===null?null:Number(favorite.temperature),
         nickname: favorite.nickname,
         notes: favorite.notes,
       })

@@ -24,7 +24,7 @@ export const cityForecastSchema = z.object({
 export const favoriteCityResponseSchema = z.object({
   id: z.number(),
   city: z.string(),
-  temperature: z.union([z.string(), z.number()]),
+  temperature: z.union([z.string(), z.number()]).nullable(),
   nickname: z.string().nullable(),
   notes: z.string().nullable(),
   tenant_id: z.string(),

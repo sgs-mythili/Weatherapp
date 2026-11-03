@@ -33,22 +33,19 @@ export async function findFavorites(
     ? `%${keyword.replace(/[\\%_]/g, "\\$&")}%`
     : "";
 
-  const where: WhereOptions = keyword
+  const where: WhereOptions = {
+  tenant_id: tenantId,
+  is_deleted: false,
+
+  ...(keyword
     ? {
-        [Op.and]: [
-          { tenant_id: tenantId },
-          {
-            [Op.or]: [
-              { city: { [Op.iLike]: pattern } },
-              { nickname: { [Op.iLike]: pattern } },
-            ],
-          },
+        [Op.or]: [
+          { city: { [Op.iLike]: pattern } },
+          { nickname: { [Op.iLike]: pattern } },
         ],
       }
-    : { 
-      tenant_id: tenantId,
-      is_deleted: false,
-    };
+    : {}),
+};
 
   const isAll = limit === "all";
 
